@@ -1,0 +1,2956 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事件股市分析台</title>
+    <style>
+        :root {
+            --bg: #f6f7f9;
+            --panel: #ffffff;
+            --panel-soft: #f9fafb;
+            --line: #d9dee7;
+            --line-strong: #b8c0cc;
+            --text: #172033;
+            --muted: #687385;
+            --muted-2: #8a94a6;
+            --blue: #2563eb;
+            --blue-soft: #eff6ff;
+            --amber: #b45309;
+            --amber-soft: #fff7ed;
+            --red: #d92d20;
+            --red-soft: #fff1f0;
+            --green: #16803c;
+            --green-soft: #ecfdf3;
+            --violet: #6d28d9;
+            --shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+            --radius: 8px;
+            font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled,
+        select:disabled,
+        input:disabled {
+            cursor: not-allowed;
+            opacity: 0.62;
+        }
+
+        .app {
+            width: min(1540px, calc(100vw - 32px));
+            margin: 0 auto;
+            padding: 24px 0 32px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(24px, 3vw, 36px);
+            line-height: 1.12;
+            letter-spacing: 0;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .sidebar,
+        .stack {
+            display: grid;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.25;
+            font-weight: 850;
+        }
+
+        .panel-body {
+            padding: 14px 16px 16px;
+            min-width: 0;
+        }
+
+        .section-note {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .field {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            color: #334155;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            min-height: 38px;
+            border: 1px solid var(--line-strong);
+            border-radius: 7px;
+            background: #fbfdff;
+            color: var(--text);
+            padding: 8px 10px;
+            outline: none;
+        }
+
+        select[multiple] {
+            min-height: 180px;
+            overflow-y: auto;
+        }
+
+        textarea {
+            min-height: 74px;
+            resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.14);
+        }
+
+        input[type="file"] {
+            width: 100%;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .period-controls {
+            display: grid;
+            gap: 12px;
+        }
+
+        .period-group {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .period-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--line);
+            background: #f8fafc;
+        }
+
+        .period-group-title {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .period-group-title strong {
+            font-size: 12px;
+            line-height: 1.1;
+        }
+
+        .period-group-title span {
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .period-actions {
+            display: flex;
+            gap: 5px;
+            flex: 0 0 auto;
+        }
+
+        .period-action {
+            min-height: 26px;
+            border: 1px solid var(--line-strong);
+            border-radius: 6px;
+            background: #ffffff;
+            color: #344054;
+            padding: 4px 7px;
+            font-size: 11px;
+            font-weight: 850;
+            line-height: 1;
+        }
+
+        .period-action:hover {
+            color: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .period-options {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 6px;
+            padding: 10px;
+        }
+
+        .period-pill {
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 8px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #344054;
+            font-size: 12px;
+            font-weight: 850;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+            user-select: none;
+        }
+
+        .period-pill:has(input:checked) {
+            color: #1d4ed8;
+            border-color: #93c5fd;
+            background: linear-gradient(180deg, #ffffff, var(--blue-soft));
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+        }
+
+        .period-pill input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .btn {
+            min-height: 38px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 850;
+            line-height: 1;
+            white-space: nowrap;
+            transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #0b6fc6, #0b5cad);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #0a62af, #084b8f);
+        }
+
+        .btn-amber {
+            background: #f59e0b;
+            color: #111827;
+        }
+
+        .btn-amber:hover {
+            background: #d97706;
+            color: #ffffff;
+        }
+
+        .btn-ghost {
+            background: #fbfdff;
+            color: #334155;
+            border-color: var(--line);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--line-strong);
+            background: var(--panel-soft);
+        }
+
+        .btn-danger {
+            background: #ffffff;
+            color: var(--red);
+            border-color: #fecdca;
+        }
+
+        .btn-danger:hover {
+            background: var(--red-soft);
+        }
+
+        .btn-icon {
+            width: 38px;
+            padding: 8px;
+        }
+
+        .status {
+            min-height: 18px;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .status.ok {
+            color: var(--green);
+            font-weight: 800;
+        }
+
+        .status.warn {
+            color: var(--amber);
+            font-weight: 800;
+        }
+
+        .status.bad {
+            color: var(--red);
+            font-weight: 800;
+        }
+
+        .tabs,
+        .segmented {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            border: 1px solid var(--line);
+            background: var(--panel-soft);
+            border-radius: 8px;
+        }
+
+        .tab,
+        .segment {
+            min-height: 32px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 850;
+            padding: 7px 10px;
+        }
+
+        .tab.active,
+        .segment.active {
+            background: #ffffff;
+            color: var(--text);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .kpi {
+            min-height: 92px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 12px;
+            display: grid;
+            align-content: space-between;
+            gap: 10px;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .kpi-value {
+            font-size: clamp(20px, 2.4vw, 30px);
+            line-height: 1;
+            font-weight: 900;
+            color: var(--text);
+        }
+
+        .kpi-detail {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .positive {
+            color: var(--red);
+        }
+
+        .negative {
+            color: var(--green);
+        }
+
+        .neutral {
+            color: var(--muted);
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-height: 24px;
+            padding: 4px 8px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: #344054;
+            background: #fbfdff;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .badge.blue {
+            color: var(--blue);
+            border-color: #bfdbfe;
+            background: var(--blue-soft);
+        }
+
+        .badge.amber {
+            color: var(--amber);
+            border-color: #fde68a;
+            background: var(--amber-soft);
+        }
+
+        .badge.green {
+            color: var(--green);
+            border-color: #bbf7d0;
+            background: var(--green-soft);
+        }
+
+        .badge.red {
+            color: var(--red);
+            border-color: #fecaca;
+            background: var(--red-soft);
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #ffffff;
+            scrollbar-width: thin;
+            scrollbar-color: #aeb8c8 #eef2f6;
+        }
+
+        .table-wrap.compact table {
+            min-width: 520px;
+            font-size: 12px;
+        }
+
+        .table-wrap.compact th,
+        .table-wrap.compact td {
+            padding: 8px 9px;
+        }
+
+        .seasonality-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .mini-title {
+            margin: 0 0 8px;
+            color: #344054;
+            font-size: 13px;
+            line-height: 1.2;
+            font-weight: 850;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            padding: 10px 11px;
+            border-bottom: 1px solid var(--line);
+            text-align: right;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f3f5f8;
+            color: #475467;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .case-name {
+            display: grid;
+            gap: 3px;
+            min-width: 220px;
+        }
+
+        .case-name strong {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .case-name span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .chart {
+            height: clamp(320px, 34vw, 430px);
+        }
+
+        .chart.tall {
+            height: clamp(380px, 42vw, 560px);
+        }
+
+        .chart svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .empty {
+            min-height: 180px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 24px;
+        }
+
+        .footer {
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .toast {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            max-width: min(420px, calc(100vw - 32px));
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #111827;
+            color: #ffffff;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.28);
+            font-size: 13px;
+            line-height: 1.45;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 160ms ease, transform 160ms ease;
+            z-index: 20;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-only {
+            display: none;
+        }
+
+        @media (max-width: 1100px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .panel.wide {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 780px) {
+            .app {
+                width: min(100vw - 20px, 760px);
+                padding: 14px 0 24px;
+            }
+
+            .topbar {
+                display: grid;
+                padding: 14px;
+            }
+
+            .toolbar {
+                justify-content: flex-start;
+            }
+
+            .sidebar,
+            .kpi-grid,
+            .seasonality-grid,
+            .row,
+            .row-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .tabs {
+                width: 100%;
+            }
+
+            .tab {
+                flex: 1;
+            }
+
+            .chart,
+            .chart.tall {
+                height: 320px;
+            }
+
+            .desktop-only {
+                display: none;
+            }
+
+            .mobile-only {
+                display: inline-flex;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .period-options {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .period-group-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .period-actions {
+                width: 100%;
+            }
+
+            .period-action {
+                flex: 1;
+            }
+            }
+
+            table {
+                min-width: 680px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">EVENT MARKET STUDY</p>
+                <h1>事件股市分析台</h1>
+            </div>
+            <div class="toolbar">
+                <button class="btn btn-ghost" id="resetViewBtn" title="重設畫面">
+                    重設
+                </button>
+                <button class="btn btn-danger" id="clearCacheBtn" title="清除快取">
+                    清除快取
+                </button>
+            </div>
+        </header>
+
+        <section class="grid">
+            <aside class="sidebar">
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">行情資料</h2>
+                        <span class="badge blue" id="dataRangeBadge">尚未載入</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="field">
+                            <label for="symbolInput">Yahoo Finance 代號</label>
+                            <div class="row">
+                                <input id="symbolInput" type="text" value="^TWII" autocomplete="off">
+                                <button class="btn btn-primary" id="loadYahooBtn">
+                                    載入
+                                </button>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="csvFileInput">CSV 匯入</label>
+                            <input id="csvFileInput" type="file" accept=".csv,text/csv">
+                        </div>
+                        <p class="status" id="dataStatus">可載入 Yahoo 圖表資料，或匯入含 Date、Close 欄位的 CSV。</p>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">分析模式</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="tabs" role="tablist" aria-label="分析模式">
+                            <button class="tab active" id="presetModeBtn" data-mode="preset" type="button">事件庫</button>
+                            <button class="tab" id="similarModeBtn" data-mode="similar" type="button">相似條件</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel wide" id="presetPanel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">事件庫</h2>
+                        <span class="badge" id="presetCountBadge">0 件</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="field">
+                            <label for="presetSelect">事件主題</label>
+                            <select id="presetSelect"></select>
+                        </div>
+                        <div class="field">
+                            <label for="presetDetail">主題描述</label>
+                            <textarea id="presetDetail" readonly></textarea>
+                        </div>
+                        <button class="btn btn-primary" id="runPresetBtn">
+                            分析事件庫
+                        </button>
+                    </div>
+                </section>
+
+                <section class="panel wide hidden" id="similarPanel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">相似條件</h2>
+                        <span class="badge amber" id="similarCountBadge">待分析</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="field">
+                            <label for="customNameInput">事件名稱</label>
+                            <input id="customNameInput" type="text" value="目前觀察事件">
+                        </div>
+                        <div class="row">
+                            <div class="field">
+                                <label for="categorySelect">事件類型</label>
+                                <select id="categorySelect"></select>
+                            </div>
+                            <div class="field">
+                                <label for="polaritySelect">衝擊方向</label>
+                                <select id="polaritySelect">
+                                    <option value="riskOff">風險趨避</option>
+                                    <option value="riskOn">風險偏好</option>
+                                    <option value="policy">政策變數</option>
+                                    <option value="calendar">季節規律</option>
+                                    <option value="mixed">多空混合</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="field">
+                                <label for="regionSelect">市場區域</label>
+                                <select id="regionSelect">
+                                    <option value="taiwan">台灣</option>
+                                    <option value="global">全球</option>
+                                    <option value="us">美國</option>
+                                    <option value="china">中國</option>
+                                    <option value="europe">歐洲</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="severityInput">衝擊強度 <span id="severityValue">3</span></label>
+                                <input id="severityInput" type="range" min="1" max="5" step="1" value="3">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="tagSelect">事件標籤</label>
+                            <select id="tagSelect" multiple></select>
+                        </div>
+                        <div class="field">
+                            <label for="similarityInput">最低相似分數 <span id="similarityValue">45</span></label>
+                            <input id="similarityInput" type="range" min="20" max="90" step="5" value="45">
+                        </div>
+                        <button class="btn btn-primary" id="runSimilarBtn">
+                            找相似案例
+                        </button>
+                    </div>
+                </section>
+
+                <section class="panel wide">
+                    <div class="panel-header">
+                        <h2 class="panel-title">回測窗口</h2>
+                        <span class="badge blue">±60 至 ±1</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="period-controls" id="periodGrid"></div>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="stack">
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-title" id="resultTitle">尚未開始分析</h2>
+                            <p class="section-note" id="resultSubtitle">載入行情資料後選擇事件主題。</p>
+                        </div>
+                        <div class="badge-row">
+                            <span class="badge blue" id="marketBadge">^TWII</span>
+                            <span class="badge" id="sampleBadge">0 個案例</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="kpi-grid">
+                            <div class="kpi">
+                                <div class="kpi-label">案例數</div>
+                                <div class="kpi-value" id="kpiCases">-</div>
+                                <div class="kpi-detail" id="kpiCasesSub">等待行情資料</div>
+                            </div>
+                            <div class="kpi">
+                                <div class="kpi-label">T+5 平均</div>
+                                <div class="kpi-value" id="kpiT5">-</div>
+                                <div class="kpi-detail" id="kpiT5Sub">-</div>
+                            </div>
+                            <div class="kpi">
+                                <div class="kpi-label">T+20 平均</div>
+                                <div class="kpi-value" id="kpiT20">-</div>
+                                <div class="kpi-detail" id="kpiT20Sub">-</div>
+                            </div>
+                            <div class="kpi">
+                                <div class="kpi-label">最差 T+20</div>
+                                <div class="kpi-value" id="kpiWorst">-</div>
+                                <div class="kpi-detail" id="kpiWorstSub">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">月份 / 星期漲跌統計</h2>
+                        <span class="badge blue">勝率與漲跌幅</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="seasonality-grid">
+                            <div>
+                                <h3 class="mini-title">每月表現</h3>
+                                <div class="table-wrap compact">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>月份</th>
+                                                <th>樣本</th>
+                                                <th>上漲率</th>
+                                                <th>下跌率</th>
+                                                <th>平均漲跌幅</th>
+                                                <th>中位數</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="monthStatsBody">
+                                            <tr><td colspan="6">尚無資料</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="mini-title">星期表現</h3>
+                                <div class="table-wrap compact">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>星期</th>
+                                                <th>樣本</th>
+                                                <th>上漲率</th>
+                                                <th>下跌率</th>
+                                                <th>平均漲跌幅</th>
+                                                <th>中位數</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="weekdayStatsBody">
+                                            <tr><td colspan="6">尚無資料</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">事件窗口平均報酬</h2>
+                        <div class="segmented" aria-label="圖表顯示">
+                            <button class="segment active" data-chart="avg" type="button">平均</button>
+                            <button class="segment" data-chart="median" type="button">中位數</button>
+                            <button class="segment" data-chart="dist" type="button">分布</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="returnChart" class="chart"></div>
+                        <div id="chartEmpty" class="empty">等待分析結果。</div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">統計摘要</h2>
+                        <span class="badge green" id="summaryBadge">勝率 / 平均 / 極值</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>窗口</th>
+                                        <th>樣本</th>
+                                        <th>上漲</th>
+                                        <th>下跌</th>
+                                        <th>勝率</th>
+                                        <th>平均</th>
+                                        <th>中位數</th>
+                                        <th>最佳</th>
+                                        <th>最差</th>
+                                        <th>標準差</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summaryBody">
+                                    <tr><td colspan="10">尚無資料</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">事件熱力圖</h2>
+                        <span class="badge amber">個案 × 回測窗口</span>
+                    </div>
+                    <div class="panel-body">
+                        <div id="heatmapChart" class="chart tall"></div>
+                        <div id="heatmapEmpty" class="empty">等待分析結果。</div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">歷史相似案例</h2>
+                        <button class="btn btn-ghost" id="exportBtn">
+                            匯出 CSV
+                        </button>
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>事件</th>
+                                        <th>事件日</th>
+                                        <th>交易日</th>
+                                        <th>相似分</th>
+                                        <th>T=0</th>
+                                        <th>T+1</th>
+                                        <th>T+2</th>
+                                        <th>T+3</th>
+                                        <th>T+4</th>
+                                        <th>T+5</th>
+                                        <th>T+10</th>
+                                        <th>T+20</th>
+                                        <th>T+30</th>
+                                        <th>T+40</th>
+                                        <th>T+50</th>
+                                        <th>T+60</th>
+                                        <th>標籤</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="casesBody">
+                                    <tr><td colspan="16">尚無資料</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">行情與事件位置</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div id="priceChart" class="chart tall"></div>
+                        <div id="priceChartEmpty" class="empty">載入行情資料後顯示。</div>
+                    </div>
+                </section>
+            </section>
+        </section>
+
+        <p class="footer">本工具只呈現歷史統計與樣本分布，不構成投資建議。事件樣本有限，市場結構、利率、估值與資金環境都可能改變結果。</p>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        const CATEGORY_LABELS = {
+            election: '選舉政治',
+            policy: '政策央行',
+            crisis: '金融危機',
+            geopolitics: '地緣衝突',
+            pandemic: '疫情災害',
+            calendar: '節慶季節',
+            trade: '貿易科技',
+            market: '市場波動'
+        };
+
+        const POLARITY_LABELS = {
+            riskOff: '風險趨避',
+            riskOn: '風險偏好',
+            policy: '政策變數',
+            calendar: '季節規律',
+            mixed: '多空混合'
+        };
+
+        const TAGS = [
+            '台灣', '美國', '全球', '中國', '歐洲', '選舉', '政權輪替', '就職',
+            '戰爭', '恐攻', '疫情', '金融壓力', '信用風險', '央行', '升息',
+            '政策', '貿易戰', '科技鏈', '假期', '開紅盤', '季節性', '高波動',
+            '系統性風險', '外資', '匯率', '降息', 'Fed', '主席交接', '清明',
+            '端午', '中秋', '元旦', '台海', '地緣政治'
+        ];
+
+        const PERIOD_GROUPS = [
+            { id: 'short', name: '回測短天期', detail: '±10 / ±5 / ±4 / ±3 / ±2 / ±1', days: [10, 5, 4, 3, 2, 1] },
+            { id: 'long', name: '回測長天期', detail: '±60 / ±50 / ±40 / ±30 / ±20', days: [60, 50, 40, 30, 20] }
+        ];
+
+        const PRESET_EVENTS = [
+            {
+                id: 'tw_presidential_election',
+                name: '台灣總統大選後首個交易日',
+                description: '以台灣總統大選投票日後第一個可交易日作為事件 T=0。',
+                category: 'election',
+                region: 'taiwan',
+                polarity: 'policy',
+                severity: 4,
+                tags: ['台灣', '選舉', '政權輪替', '政策', '高波動'],
+                dates: [
+                    ['2000-03-18', '2000 台灣總統大選'],
+                    ['2004-03-20', '2004 台灣總統大選'],
+                    ['2008-03-22', '2008 台灣總統大選'],
+                    ['2012-01-14', '2012 台灣總統大選'],
+                    ['2016-01-16', '2016 台灣總統大選'],
+                    ['2020-01-11', '2020 台灣總統大選'],
+                    ['2024-01-13', '2024 台灣總統大選']
+                ]
+            },
+            {
+                id: 'us_presidential_election',
+                name: '美國總統大選後首個交易日',
+                description: '以美國總統大選投票日後台股第一個可交易日作為事件 T=0。',
+                category: 'election',
+                region: 'us',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['美國', '選舉', '政策', '外資', '匯率', '高波動'],
+                dates: [
+                    ['2000-11-07', '2000 美國總統大選'],
+                    ['2004-11-02', '2004 美國總統大選'],
+                    ['2008-11-04', '2008 美國總統大選'],
+                    ['2012-11-06', '2012 美國總統大選'],
+                    ['2016-11-08', '2016 美國總統大選'],
+                    ['2020-11-03', '2020 美國總統大選'],
+                    ['2024-11-05', '2024 美國總統大選']
+                ]
+            },
+            {
+                id: 'taiwan_inauguration',
+                name: '520 總統就職日',
+                description: '以台灣總統就職日或其後第一個交易日作為事件 T=0。',
+                category: 'policy',
+                region: 'taiwan',
+                polarity: 'policy',
+                severity: 3,
+                tags: ['台灣', '就職', '政策', '選舉'],
+                dates: [
+                    ['2000-05-20', '2000 總統就職'],
+                    ['2004-05-20', '2004 總統就職'],
+                    ['2008-05-20', '2008 總統就職'],
+                    ['2012-05-20', '2012 總統就職'],
+                    ['2016-05-20', '2016 總統就職'],
+                    ['2020-05-20', '2020 總統就職'],
+                    ['2024-05-20', '2024 總統就職']
+                ]
+            },
+            {
+                id: 'lunar_new_year_open',
+                name: '農曆新年開紅盤',
+                description: '以農曆年假後第一個交易日作為事件 T=0。',
+                category: 'calendar',
+                region: 'taiwan',
+                polarity: 'calendar',
+                severity: 2,
+                tags: ['台灣', '假期', '開紅盤', '季節性'],
+                dates: [
+                    ['2000-02-11', '2000 農曆新年開紅盤'],
+                    ['2001-01-30', '2001 農曆新年開紅盤'],
+                    ['2002-02-18', '2002 農曆新年開紅盤'],
+                    ['2003-02-06', '2003 農曆新年開紅盤'],
+                    ['2004-01-28', '2004 農曆新年開紅盤'],
+                    ['2005-02-14', '2005 農曆新年開紅盤'],
+                    ['2006-02-03', '2006 農曆新年開紅盤'],
+                    ['2007-02-26', '2007 農曆新年開紅盤'],
+                    ['2008-02-12', '2008 農曆新年開紅盤'],
+                    ['2009-02-02', '2009 農曆新年開紅盤'],
+                    ['2010-02-22', '2010 農曆新年開紅盤'],
+                    ['2011-02-08', '2011 農曆新年開紅盤'],
+                    ['2012-01-30', '2012 農曆新年開紅盤'],
+                    ['2013-02-18', '2013 農曆新年開紅盤'],
+                    ['2014-02-05', '2014 農曆新年開紅盤'],
+                    ['2015-02-24', '2015 農曆新年開紅盤'],
+                    ['2016-02-15', '2016 農曆新年開紅盤'],
+                    ['2017-02-02', '2017 農曆新年開紅盤'],
+                    ['2018-02-21', '2018 農曆新年開紅盤'],
+                    ['2019-02-11', '2019 農曆新年開紅盤'],
+                    ['2020-01-30', '2020 農曆新年開紅盤'],
+                    ['2021-02-17', '2021 農曆新年開紅盤'],
+                    ['2022-02-07', '2022 農曆新年開紅盤'],
+                    ['2023-01-30', '2023 農曆新年開紅盤'],
+                    ['2024-02-15', '2024 農曆新年開紅盤']
+                ]
+            },
+            {
+                id: 'roc_new_year',
+                name: '元旦連假後首個交易日',
+                description: '以 1 月 1 日或其後第一個交易日作為事件 T=0，觀察新年度開局效應。',
+                category: 'calendar',
+                region: 'taiwan',
+                polarity: 'calendar',
+                severity: 2,
+                tags: ['台灣', '假期', '元旦', '季節性'],
+                dates: annualDates(1987, 2026, 1, 1, '元旦')
+            },
+            {
+                id: 'qingming_holiday',
+                name: '清明節連假後首個交易日',
+                description: '以清明節或補假後第一個交易日作為事件 T=0。',
+                category: 'calendar',
+                region: 'taiwan',
+                polarity: 'calendar',
+                severity: 2,
+                tags: ['台灣', '假期', '清明', '季節性'],
+                dates: [
+                    ['2000-04-04', '2000 清明節'],
+                    ['2001-04-05', '2001 清明節'],
+                    ['2002-04-05', '2002 清明節'],
+                    ['2003-04-05', '2003 清明節'],
+                    ['2004-04-04', '2004 清明節'],
+                    ['2005-04-05', '2005 清明節'],
+                    ['2006-04-05', '2006 清明節'],
+                    ['2007-04-05', '2007 清明節'],
+                    ['2008-04-04', '2008 清明節'],
+                    ['2009-04-04', '2009 清明節'],
+                    ['2010-04-05', '2010 清明節'],
+                    ['2011-04-05', '2011 清明節'],
+                    ['2012-04-04', '2012 清明節'],
+                    ['2013-04-04', '2013 清明節'],
+                    ['2014-04-05', '2014 清明節'],
+                    ['2015-04-05', '2015 清明節'],
+                    ['2016-04-04', '2016 清明節'],
+                    ['2017-04-04', '2017 清明節'],
+                    ['2018-04-05', '2018 清明節'],
+                    ['2019-04-05', '2019 清明節'],
+                    ['2020-04-04', '2020 清明節'],
+                    ['2021-04-04', '2021 清明節'],
+                    ['2022-04-05', '2022 清明節'],
+                    ['2023-04-05', '2023 清明節'],
+                    ['2024-04-04', '2024 清明節'],
+                    ['2025-04-04', '2025 清明節'],
+                    ['2026-04-06', '2026 清明節補假']
+                ]
+            },
+            {
+                id: 'dragon_boat_holiday',
+                name: '端午節連假後首個交易日',
+                description: '以端午節或其後第一個交易日作為事件 T=0。',
+                category: 'calendar',
+                region: 'taiwan',
+                polarity: 'calendar',
+                severity: 2,
+                tags: ['台灣', '假期', '端午', '季節性'],
+                dates: [
+                    ['2000-06-06', '2000 端午節'],
+                    ['2001-06-25', '2001 端午節'],
+                    ['2002-06-15', '2002 端午節'],
+                    ['2003-06-04', '2003 端午節'],
+                    ['2004-06-22', '2004 端午節'],
+                    ['2005-06-11', '2005 端午節'],
+                    ['2006-05-31', '2006 端午節'],
+                    ['2007-06-19', '2007 端午節'],
+                    ['2008-06-08', '2008 端午節'],
+                    ['2009-05-28', '2009 端午節'],
+                    ['2010-06-16', '2010 端午節'],
+                    ['2011-06-06', '2011 端午節'],
+                    ['2012-06-23', '2012 端午節'],
+                    ['2013-06-12', '2013 端午節'],
+                    ['2014-06-02', '2014 端午節'],
+                    ['2015-06-20', '2015 端午節'],
+                    ['2016-06-09', '2016 端午節'],
+                    ['2017-05-30', '2017 端午節'],
+                    ['2018-06-18', '2018 端午節'],
+                    ['2019-06-07', '2019 端午節'],
+                    ['2020-06-25', '2020 端午節'],
+                    ['2021-06-14', '2021 端午節'],
+                    ['2022-06-03', '2022 端午節'],
+                    ['2023-06-22', '2023 端午節'],
+                    ['2024-06-10', '2024 端午節'],
+                    ['2025-05-31', '2025 端午節'],
+                    ['2026-06-19', '2026 端午節']
+                ]
+            },
+            {
+                id: 'mid_autumn_holiday',
+                name: '中秋節連假後首個交易日',
+                description: '以中秋節或其後第一個交易日作為事件 T=0。',
+                category: 'calendar',
+                region: 'taiwan',
+                polarity: 'calendar',
+                severity: 2,
+                tags: ['台灣', '假期', '中秋', '季節性'],
+                dates: [
+                    ['2000-09-12', '2000 中秋節'],
+                    ['2001-10-01', '2001 中秋節'],
+                    ['2002-09-21', '2002 中秋節'],
+                    ['2003-09-11', '2003 中秋節'],
+                    ['2004-09-28', '2004 中秋節'],
+                    ['2005-09-18', '2005 中秋節'],
+                    ['2006-10-06', '2006 中秋節'],
+                    ['2007-09-25', '2007 中秋節'],
+                    ['2008-09-14', '2008 中秋節'],
+                    ['2009-10-03', '2009 中秋節'],
+                    ['2010-09-22', '2010 中秋節'],
+                    ['2011-09-12', '2011 中秋節'],
+                    ['2012-09-30', '2012 中秋節'],
+                    ['2013-09-19', '2013 中秋節'],
+                    ['2014-09-08', '2014 中秋節'],
+                    ['2015-09-27', '2015 中秋節'],
+                    ['2016-09-15', '2016 中秋節'],
+                    ['2017-10-04', '2017 中秋節'],
+                    ['2018-09-24', '2018 中秋節'],
+                    ['2019-09-13', '2019 中秋節'],
+                    ['2020-10-01', '2020 中秋節'],
+                    ['2021-09-21', '2021 中秋節'],
+                    ['2022-09-10', '2022 中秋節'],
+                    ['2023-09-29', '2023 中秋節'],
+                    ['2024-09-17', '2024 中秋節'],
+                    ['2025-10-06', '2025 中秋節'],
+                    ['2026-09-25', '2026 中秋節']
+                ]
+            },
+            {
+                id: 'major_risk_events',
+                name: '大型風險事件',
+                description: '金融壓力、恐攻、疫情、戰爭等高衝擊事件集合。',
+                category: 'crisis',
+                region: 'global',
+                polarity: 'riskOff',
+                severity: 5,
+                tags: ['全球', '高波動', '系統性風險', '金融壓力'],
+                dates: [
+                    ['2001-09-11', '911 恐怖攻擊'],
+                    ['2008-09-15', '雷曼兄弟破產'],
+                    ['2011-08-08', '美債信評下調後市場震盪'],
+                    ['2015-08-24', '全球股災與人民幣貶值壓力'],
+                    ['2020-02-24', 'COVID-19 全球股市急跌'],
+                    ['2022-02-24', '俄烏戰爭爆發']
+                ]
+            },
+            {
+                id: 'policy_rate_events',
+                name: '央行與利率衝擊',
+                description: '以代表性的聯準會政策轉折或升息事件作為觀察樣本。',
+                category: 'policy',
+                region: 'us',
+                polarity: 'policy',
+                severity: 4,
+                tags: ['美國', '央行', '升息', '政策', '匯率', '外資'],
+                dates: [
+                    ['2004-06-30', 'Fed 啟動升息循環'],
+                    ['2015-12-16', 'Fed 金融海嘯後首次升息'],
+                    ['2018-12-19', 'Fed 升息與縮表壓力'],
+                    ['2020-03-03', 'Fed 疫情期間緊急降息'],
+                    ['2022-03-16', 'Fed 啟動疫情後升息循環']
+                ]
+            },
+            {
+                id: 'fed_chair_transition',
+                name: 'Fed 主席交接與任期事件',
+                description: '以美國聯準會主席正式接任或連任宣誓日作為事件 T=0。',
+                category: 'policy',
+                region: 'us',
+                polarity: 'policy',
+                severity: 3,
+                tags: ['美國', 'Fed', '主席交接', '央行', '政策'],
+                dates: [
+                    ['1987-08-11', 'Alan Greenspan 接任 Fed 主席'],
+                    ['2006-02-01', 'Ben Bernanke 接任 Fed 主席'],
+                    ['2014-02-03', 'Janet Yellen 接任 Fed 主席'],
+                    ['2018-02-05', 'Jerome Powell 接任 Fed 主席'],
+                    ['2022-05-23', 'Jerome Powell 第二任期宣誓'],
+                    ['2026-05-15', 'Kevin Warsh 接任流程啟動 / Powell 主席任期結束']
+                ]
+            },
+            {
+                id: 'fed_rate_hikes',
+                name: 'Fed 升息事件',
+                description: '以主要升息循環起點、政策轉折與大型升息日作為事件 T=0。',
+                category: 'policy',
+                region: 'us',
+                polarity: 'riskOff',
+                severity: 4,
+                tags: ['美國', 'Fed', '央行', '升息', '外資', '匯率'],
+                dates: [
+                    ['1994-02-04', 'Fed 1994 升息循環啟動'],
+                    ['1999-06-30', 'Fed 1999 升息循環啟動'],
+                    ['2004-06-30', 'Fed 2004 升息循環啟動'],
+                    ['2015-12-16', 'Fed 金融海嘯後首次升息'],
+                    ['2016-12-14', 'Fed 2016 升息'],
+                    ['2017-03-15', 'Fed 2017 升息'],
+                    ['2018-12-19', 'Fed 2018 升息與縮表壓力'],
+                    ['2022-03-16', 'Fed 疫情後首次升息'],
+                    ['2022-05-04', 'Fed 升息 50bp'],
+                    ['2022-06-15', 'Fed 升息 75bp'],
+                    ['2022-09-21', 'Fed 升息 75bp'],
+                    ['2023-07-26', 'Fed 2023 升息']
+                ]
+            },
+            {
+                id: 'fed_rate_cuts',
+                name: 'Fed 降息事件',
+                description: '以主要降息循環起點、緊急降息與近期寬鬆轉折作為事件 T=0。',
+                category: 'policy',
+                region: 'us',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['美國', 'Fed', '央行', '降息', '金融壓力', '外資'],
+                dates: [
+                    ['1998-09-29', 'Fed LTCM 風險後降息'],
+                    ['2001-01-03', 'Fed 2001 緊急降息'],
+                    ['2001-09-17', 'Fed 911 後降息'],
+                    ['2007-09-18', 'Fed 次貸危機降息循環啟動'],
+                    ['2008-01-22', 'Fed 2008 緊急降息'],
+                    ['2008-10-08', '全球央行協調降息'],
+                    ['2019-07-31', 'Fed 2019 首次預防性降息'],
+                    ['2019-09-18', 'Fed 2019 降息'],
+                    ['2020-03-03', 'Fed 疫情緊急降息'],
+                    ['2020-03-15', 'Fed 降至零利率區間'],
+                    ['2024-09-18', 'Fed 2024 首次降息'],
+                    ['2024-11-07', 'Fed 2024 第二次降息'],
+                    ['2024-12-18', 'Fed 2024 第三次降息']
+                ]
+            },
+            {
+                id: 'terror_security_events',
+                name: '恐攻與安全事件',
+                description: '以美國及全球主要恐怖攻擊、安全衝擊事件作為事件 T=0。',
+                category: 'geopolitics',
+                region: 'global',
+                polarity: 'riskOff',
+                severity: 5,
+                tags: ['全球', '美國', '恐攻', '高波動', '地緣政治'],
+                dates: [
+                    ['1993-02-26', '世界貿易中心爆炸案'],
+                    ['1995-04-19', '奧克拉荷馬市爆炸案'],
+                    ['1998-08-07', '美國大使館爆炸案'],
+                    ['2001-09-11', '911 恐怖攻擊'],
+                    ['2005-07-07', '倫敦七七爆炸案'],
+                    ['2013-04-15', '波士頓馬拉松爆炸案'],
+                    ['2015-11-13', '巴黎恐怖攻擊'],
+                    ['2016-03-22', '布魯塞爾恐怖攻擊'],
+                    ['2016-06-12', '奧蘭多夜店槍擊案'],
+                    ['2023-10-07', '哈瑪斯襲擊以色列']
+                ]
+            },
+            {
+                id: 'geopolitical_war_events',
+                name: '地緣政治與戰爭事件',
+                description: '以戰爭爆發、區域衝突升級與重大地緣政治事件作為事件 T=0。',
+                category: 'geopolitics',
+                region: 'global',
+                polarity: 'riskOff',
+                severity: 5,
+                tags: ['全球', '戰爭', '地緣政治', '高波動', '系統性風險'],
+                dates: [
+                    ['1990-08-02', '伊拉克入侵科威特'],
+                    ['1991-01-17', '波斯灣戰爭空襲開始'],
+                    ['2003-03-20', '伊拉克戰爭開始'],
+                    ['2008-08-08', '俄喬戰爭爆發'],
+                    ['2014-02-27', '克里米亞危機升級'],
+                    ['2016-06-23', '英國脫歐公投'],
+                    ['2020-01-03', '美軍擊殺 Qassem Soleimani'],
+                    ['2022-02-24', '俄羅斯全面入侵烏克蘭'],
+                    ['2023-10-07', '以哈戰爭爆發'],
+                    ['2024-04-13', '伊朗攻擊以色列']
+                ]
+            },
+            {
+                id: 'taiwan_strait_events',
+                name: '台海與台灣政治風險事件',
+                description: '以台海軍事壓力、兩岸政策衝擊與台灣內部重大政治事件作為事件 T=0。',
+                category: 'geopolitics',
+                region: 'taiwan',
+                polarity: 'riskOff',
+                severity: 4,
+                tags: ['台灣', '台海', '地緣政治', '政策', '高波動'],
+                dates: [
+                    ['1995-07-21', '第三次台海危機飛彈演習開始'],
+                    ['1996-03-08', '台海飛彈試射升級'],
+                    ['2005-03-14', '中國反分裂國家法通過'],
+                    ['2014-03-18', '太陽花學運開始'],
+                    ['2022-08-02', 'Pelosi 訪台'],
+                    ['2024-05-23', '中國環台軍演 Joint Sword-2024A']
+                ]
+            },
+            {
+                id: 'trade_tech_events',
+                name: '貿易與科技鏈事件',
+                description: '美中貿易、科技限制與供應鏈壓力相關事件。',
+                category: 'trade',
+                region: 'global',
+                polarity: 'riskOff',
+                severity: 4,
+                tags: ['美國', '中國', '貿易戰', '科技鏈', '外資', '匯率'],
+                dates: [
+                    ['2018-03-22', '美國宣布對中國商品加徵關稅'],
+                    ['2018-07-06', '美中第一輪關稅正式生效'],
+                    ['2019-05-10', '美中關稅升級'],
+                    ['2020-05-15', '美國擴大華為出口限制'],
+                    ['2022-10-07', '美國半導體出口管制新規']
+                ]
+            }
+        ];
+
+        const state = {
+            marketSymbol: '^TWII',
+            priceData: [],
+            currentMode: 'preset',
+            lastRun: null,
+            activeChart: 'avg'
+        };
+
+        const el = {
+            symbolInput: document.getElementById('symbolInput'),
+            loadYahooBtn: document.getElementById('loadYahooBtn'),
+            csvFileInput: document.getElementById('csvFileInput'),
+            dataStatus: document.getElementById('dataStatus'),
+            dataRangeBadge: document.getElementById('dataRangeBadge'),
+            presetModeBtn: document.getElementById('presetModeBtn'),
+            similarModeBtn: document.getElementById('similarModeBtn'),
+            presetPanel: document.getElementById('presetPanel'),
+            similarPanel: document.getElementById('similarPanel'),
+            presetSelect: document.getElementById('presetSelect'),
+            presetDetail: document.getElementById('presetDetail'),
+            presetCountBadge: document.getElementById('presetCountBadge'),
+            runPresetBtn: document.getElementById('runPresetBtn'),
+            categorySelect: document.getElementById('categorySelect'),
+            polaritySelect: document.getElementById('polaritySelect'),
+            regionSelect: document.getElementById('regionSelect'),
+            severityInput: document.getElementById('severityInput'),
+            severityValue: document.getElementById('severityValue'),
+            tagSelect: document.getElementById('tagSelect'),
+            periodGrid: document.getElementById('periodGrid'),
+            similarityInput: document.getElementById('similarityInput'),
+            similarityValue: document.getElementById('similarityValue'),
+            customNameInput: document.getElementById('customNameInput'),
+            runSimilarBtn: document.getElementById('runSimilarBtn'),
+            similarCountBadge: document.getElementById('similarCountBadge'),
+            resultTitle: document.getElementById('resultTitle'),
+            resultSubtitle: document.getElementById('resultSubtitle'),
+            marketBadge: document.getElementById('marketBadge'),
+            sampleBadge: document.getElementById('sampleBadge'),
+            kpiCases: document.getElementById('kpiCases'),
+            kpiCasesSub: document.getElementById('kpiCasesSub'),
+            kpiT5: document.getElementById('kpiT5'),
+            kpiT5Sub: document.getElementById('kpiT5Sub'),
+            kpiT20: document.getElementById('kpiT20'),
+            kpiT20Sub: document.getElementById('kpiT20Sub'),
+            kpiWorst: document.getElementById('kpiWorst'),
+            kpiWorstSub: document.getElementById('kpiWorstSub'),
+            returnChart: document.getElementById('returnChart'),
+            chartEmpty: document.getElementById('chartEmpty'),
+            heatmapChart: document.getElementById('heatmapChart'),
+            heatmapEmpty: document.getElementById('heatmapEmpty'),
+            priceChart: document.getElementById('priceChart'),
+            priceChartEmpty: document.getElementById('priceChartEmpty'),
+            summaryBody: document.getElementById('summaryBody'),
+            monthStatsBody: document.getElementById('monthStatsBody'),
+            weekdayStatsBody: document.getElementById('weekdayStatsBody'),
+            casesBody: document.getElementById('casesBody'),
+            exportBtn: document.getElementById('exportBtn'),
+            resetViewBtn: document.getElementById('resetViewBtn'),
+            clearCacheBtn: document.getElementById('clearCacheBtn'),
+            toast: document.getElementById('toast')
+        };
+
+        function init() {
+            populateControls();
+            bindEvents();
+            renderPresetDetail();
+            renderEmptyState();
+        }
+
+        function populateControls() {
+            el.presetSelect.innerHTML = PRESET_EVENTS.map(preset => `<option value="${preset.id}">${escapeHtml(preset.name)}</option>`).join('');
+            el.presetCountBadge.textContent = `${PRESET_EVENTS.length} 類`;
+
+            el.categorySelect.innerHTML = Object.entries(CATEGORY_LABELS)
+                .map(([value, label]) => `<option value="${value}">${label}</option>`)
+                .join('');
+
+            el.tagSelect.innerHTML = TAGS.map(tag => `<option value="${tag}">${tag}</option>`).join('');
+            setSelectedTags(['台灣', '選舉', '政策', '高波動']);
+
+            el.periodGrid.innerHTML = [
+                ...PERIOD_GROUPS.map(group => renderPeriodGroup(group)),
+                `
+                    <div class="period-group">
+                        <div class="period-group-header">
+                            <div class="period-group-title">
+                                <strong>事件當日</strong>
+                                <span>T=0</span>
+                            </div>
+                        </div>
+                        <div class="period-options">
+                            <label class="period-pill">
+                                <input type="checkbox" class="period-check" data-periods="0" checked>
+                                T=0
+                            </label>
+                        </div>
+                    </div>
+                `
+            ].join('');
+        }
+
+        function renderPeriodGroup(group) {
+            const options = group.days.map(day => `
+                <label class="period-pill">
+                    <input type="checkbox" class="period-check" data-group="${group.id}" data-periods="-${day},${day}" checked>
+                    ±${day}
+                </label>
+            `).join('');
+
+            return `
+                <div class="period-group" data-period-group="${group.id}">
+                    <div class="period-group-header">
+                        <div class="period-group-title">
+                            <strong>${escapeHtml(group.name)}</strong>
+                            <span>${escapeHtml(group.detail)}</span>
+                        </div>
+                        <div class="period-actions">
+                            <button class="period-action" type="button" data-period-action="on" data-group="${group.id}">全開</button>
+                            <button class="period-action" type="button" data-period-action="off" data-group="${group.id}">全關</button>
+                        </div>
+                    </div>
+                    <div class="period-options">
+                        ${options}
+                    </div>
+                </div>
+            `;
+        }
+
+        function bindEvents() {
+            el.loadYahooBtn.addEventListener('click', loadYahooData);
+            el.csvFileInput.addEventListener('change', handleCsvUpload);
+            el.presetSelect.addEventListener('change', renderPresetDetail);
+            el.runPresetBtn.addEventListener('click', runPresetAnalysis);
+            el.runSimilarBtn.addEventListener('click', runSimilarAnalysis);
+            el.exportBtn.addEventListener('click', exportCases);
+            el.resetViewBtn.addEventListener('click', resetView);
+            el.clearCacheBtn.addEventListener('click', clearCache);
+            el.severityInput.addEventListener('input', () => el.severityValue.textContent = el.severityInput.value);
+            el.similarityInput.addEventListener('input', () => el.similarityValue.textContent = el.similarityInput.value);
+
+            document.querySelectorAll('.tab').forEach(button => {
+                button.addEventListener('click', () => setMode(button.dataset.mode));
+            });
+
+            document.querySelectorAll('.segment').forEach(button => {
+                button.addEventListener('click', () => {
+                    state.activeChart = button.dataset.chart;
+                    document.querySelectorAll('.segment').forEach(item => item.classList.toggle('active', item === button));
+                    renderReturnChart();
+                });
+            });
+
+            document.querySelectorAll('.period-check').forEach(check => {
+                check.addEventListener('change', () => {
+                    if (state.lastRun) rerunCurrentAnalysis();
+                });
+            });
+
+            document.querySelectorAll('.period-action').forEach(button => {
+                button.addEventListener('click', () => {
+                    setPeriodGroup(button.dataset.group, button.dataset.periodAction === 'on');
+                    if (state.lastRun) rerunCurrentAnalysis();
+                });
+            });
+
+            window.addEventListener('resize', debounce(() => {
+                if (state.lastRun) {
+                    renderReturnChart();
+                    renderHeatmap(state.lastRun);
+                    renderPriceChart(state.lastRun.cases);
+                } else if (state.priceData.length) {
+                    renderPriceChart([]);
+                }
+            }, 150));
+        }
+
+        function setMode(mode) {
+            state.currentMode = mode;
+            el.presetModeBtn.classList.toggle('active', mode === 'preset');
+            el.similarModeBtn.classList.toggle('active', mode === 'similar');
+            el.presetPanel.classList.toggle('hidden', mode !== 'preset');
+            el.similarPanel.classList.toggle('hidden', mode !== 'similar');
+        }
+
+        function setPeriodGroup(groupId, checked) {
+            document.querySelectorAll(`.period-check[data-group="${groupId}"]`).forEach(input => {
+                input.checked = checked;
+            });
+        }
+
+        function renderPresetDetail() {
+            const preset = getSelectedPreset();
+            if (!preset) return;
+            const firstYear = preset.dates[0][0].slice(0, 4);
+            const lastYear = preset.dates[preset.dates.length - 1][0].slice(0, 4);
+            el.presetDetail.value = `${preset.description}\n樣本：${preset.dates.length} 件 (${firstYear}-${lastYear})\n標籤：${preset.tags.join('、')}`;
+        }
+
+        async function loadYahooData() {
+            const symbol = el.symbolInput.value.trim() || '^TWII';
+            const startYear = 1987;
+            const cacheKey = `market_cache_${symbol}_${startYear}`;
+            state.marketSymbol = symbol;
+            updateDataStatus('warn', `載入 ${symbol} 行情資料中...`);
+            el.loadYahooBtn.disabled = true;
+
+            try {
+                const cached = getFreshCache(cacheKey);
+                let rows;
+                if (cached) {
+                    rows = JSON.parse(cached);
+                    updateDataStatus('ok', `已讀取 ${symbol} 本地快取。`);
+                } else {
+                    const period1 = Math.floor(new Date(startYear, 0, 1).getTime() / 1000);
+                    const period2 = Math.floor(Date.now() / 1000);
+                    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1d&events=history&includeAdjustedClose=true`;
+                    const text = await fetchThroughMirrors(url, 'json');
+                    rows = parseYahooChart(text);
+                    setCache(cacheKey, JSON.stringify(rows));
+                }
+
+                setPriceData(rows, symbol);
+                showToast(`${symbol} 已載入 ${state.priceData.length.toLocaleString()} 筆交易日。`);
+            } catch (error) {
+                updateDataStatus('bad', `無法載入 Yahoo 資料：${error.message}。可改用 CSV 匯入。`);
+            } finally {
+                el.loadYahooBtn.disabled = false;
+            }
+        }
+
+        function handleCsvUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            updateDataStatus('warn', `解析 ${file.name} 中...`);
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const rows = parseCsvRows(parseCsv(String(reader.result || '')));
+                    state.marketSymbol = file.name.replace(/\.csv$/i, '');
+                    setPriceData(rows, state.marketSymbol);
+                    showToast(`CSV 已載入 ${state.priceData.length.toLocaleString()} 筆交易日。`);
+                } catch (error) {
+                    updateDataStatus('bad', `CSV 無法解析：${error.message}`);
+                }
+            };
+            reader.onerror = () => updateDataStatus('bad', 'CSV 讀取失敗。');
+            reader.readAsText(file, 'utf-8');
+        }
+
+        function setPriceData(rows, symbol) {
+            state.priceData = rows
+                .map(normalizePriceRow)
+                .filter(row => row.dateObj && Number.isFinite(row.close) && row.close > 0)
+                .sort((a, b) => a.dateObj - b.dateObj);
+
+            if (!state.priceData.length) throw new Error('沒有可用的收盤價');
+
+            const first = state.priceData[0];
+            const last = state.priceData[state.priceData.length - 1];
+            el.marketBadge.textContent = symbol;
+            el.dataRangeBadge.textContent = `${first.date} - ${last.date}`;
+            updateDataStatus('ok', `載入成功：${state.priceData.length.toLocaleString()} 筆，${first.date} 至 ${last.date}`);
+            renderCalendarStats();
+            renderPriceChart([]);
+            rerunCurrentAnalysis();
+        }
+
+        function normalizePriceRow(row) {
+            const dateObj = row.dateObj instanceof Date
+                ? normalizeDate(row.dateObj)
+                : parseDate(row.date || row.Date || row.dateObj);
+            const close = Number(row.close ?? row.Close);
+            const openRaw = Number(row.open ?? row.Open);
+            const open = Number.isFinite(openRaw) ? openRaw : close;
+
+            return {
+                ...row,
+                dateObj,
+                date: dateObj ? formatDate(dateObj) : '',
+                open,
+                high: Number(row.high ?? row.High),
+                low: Number(row.low ?? row.Low),
+                close,
+                volume: Number(row.volume ?? row.Volume ?? 0)
+            };
+        }
+
+        async function fetchThroughMirrors(targetUrl, expectedType) {
+            const encoded = encodeURIComponent(targetUrl);
+            const urls = [
+                targetUrl,
+                `https://api.allorigins.win/raw?url=${encoded}`,
+                `https://corsproxy.io/?${encoded}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encoded}`
+            ];
+
+            const attempts = urls.map(url => fetchWithTimeout(url, 15000).then(text => {
+                if (expectedType === 'json') JSON.parse(text);
+                return text;
+            }));
+
+            return Promise.any(attempts).catch(() => {
+                throw new Error('資料來源或 CORS 代理目前無回應');
+            });
+        }
+
+        function fetchWithTimeout(url, timeoutMs) {
+            const controller = new AbortController();
+            const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+            return fetch(url, { cache: 'no-store', signal: controller.signal })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.text();
+                })
+                .finally(() => window.clearTimeout(timer));
+        }
+
+        function parseYahooChart(text) {
+            const json = JSON.parse(text);
+            const result = json?.chart?.result?.[0];
+            const timestamps = result?.timestamp || [];
+            const quote = result?.indicators?.quote?.[0] || {};
+            const adjClose = result?.indicators?.adjclose?.[0]?.adjclose || [];
+            const rows = [];
+
+            timestamps.forEach((timestamp, index) => {
+                const dateObj = new Date(timestamp * 1000);
+                const close = choosePrice(quote.close?.[index], adjClose[index]);
+                const open = choosePrice(quote.open?.[index], close);
+                if (!Number.isFinite(close)) return;
+
+                rows.push({
+                    dateObj: normalizeDate(dateObj),
+                    date: formatDate(dateObj),
+                    open,
+                    high: Number(quote.high?.[index]),
+                    low: Number(quote.low?.[index]),
+                    close,
+                    volume: Number(quote.volume?.[index] || 0)
+                });
+            });
+
+            return rows;
+        }
+
+        function parseCsvRows(rows) {
+            return rows.map(row => {
+                const keys = Object.keys(row);
+                const dateRaw = pick(row, ['Date', 'date', '日期', '時間', 'Time']) ?? row[keys[0]];
+                const adjClose = pickNumber(row, ['Adj Close', 'AdjClose', 'adjClose', 'Adj Close*', '調整收盤價']);
+                const close = pickNumber(row, ['Close', 'close', '收盤價', '收盤', 'Price']);
+                const open = pickNumber(row, ['Open', 'open', '開盤價', '開盤']) ?? close;
+                const selectedClose = adjClose ?? close;
+                const dateObj = parseDate(dateRaw);
+
+                return {
+                    dateObj,
+                    date: dateObj ? formatDate(dateObj) : '',
+                    open,
+                    close: selectedClose,
+                    high: pickNumber(row, ['High', 'high', '最高價']),
+                    low: pickNumber(row, ['Low', 'low', '最低價']),
+                    volume: pickNumber(row, ['Volume', 'volume', '成交量']) || 0
+                };
+            });
+        }
+
+        function choosePrice(close, adjClose) {
+            return Number.isFinite(Number(adjClose)) ? Number(adjClose) : Number(close);
+        }
+
+        function getSelectedPreset() {
+            return PRESET_EVENTS.find(preset => preset.id === el.presetSelect.value) || PRESET_EVENTS[0];
+        }
+
+        function runPresetAnalysis() {
+            if (!ensureData()) return;
+            const preset = getSelectedPreset();
+            const cases = preset.dates.map(([date, name]) => ({
+                id: `${preset.id}_${date}`,
+                name,
+                date,
+                category: preset.category,
+                region: preset.region,
+                polarity: preset.polarity,
+                severity: preset.severity,
+                tags: preset.tags,
+                score: 100,
+                source: preset.name
+            }));
+            runAnalysis(cases, preset.name, preset.description);
+        }
+
+        function runSimilarAnalysis() {
+            if (!ensureData()) return;
+            const profile = {
+                name: el.customNameInput.value.trim() || '目前觀察事件',
+                category: el.categorySelect.value,
+                polarity: el.polaritySelect.value,
+                region: el.regionSelect.value,
+                severity: Number(el.severityInput.value),
+                tags: Array.from(el.tagSelect.selectedOptions).map(option => option.value)
+            };
+            const threshold = Number(el.similarityInput.value);
+            const candidates = flattenEventCatalog()
+                .map(event => ({ ...event, score: scoreSimilarity(event, profile) }))
+                .filter(event => event.score >= threshold)
+                .sort((a, b) => b.score - a.score || a.date.localeCompare(b.date));
+
+            el.similarCountBadge.textContent = `${candidates.length} 件`;
+            runAnalysis(candidates, `相似事件：${profile.name}`, `${CATEGORY_LABELS[profile.category]} / ${POLARITY_LABELS[profile.polarity]} / 相似分數 ${threshold}+`);
+        }
+
+        function rerunCurrentAnalysis() {
+            if (!state.priceData.length) return;
+            if (state.lastRun?.mode === 'similar') {
+                runSimilarAnalysis();
+            } else if (state.lastRun?.mode === 'preset' || state.currentMode === 'preset') {
+                runPresetAnalysis();
+            }
+        }
+
+        function runAnalysis(events, title, subtitle) {
+            const periods = getSelectedPeriods();
+            if (!periods.length) {
+                showToast('至少保留一個回測窗口。');
+                return;
+            }
+
+            const cases = events
+                .map(event => buildCase(event, periods))
+                .filter(Boolean);
+            const summary = summarizeCases(cases, periods);
+
+            state.lastRun = {
+                mode: state.currentMode,
+                title,
+                subtitle,
+                cases,
+                summary,
+                periods
+            };
+
+            renderResults();
+        }
+
+        function buildCase(event, periods) {
+            const eventDate = parseDate(event.date);
+            if (!eventDate) return null;
+            const index = findTradingIndexOnOrAfter(eventDate);
+            if (index < 0) return null;
+            const trading = state.priceData[index];
+            const calendarLag = Math.round((trading.dateObj - normalizeDate(eventDate)) / 86400000);
+            if (calendarLag > 10) return null;
+
+            const returns = {};
+            periods.forEach(period => {
+                returns[period] = calcWindowReturn(index, period);
+            });
+
+            return {
+                ...event,
+                eventDate: formatDate(eventDate),
+                tradingDate: trading.date,
+                tradingIndex: index,
+                calendarLag,
+                returns
+            };
+        }
+
+        function calcWindowReturn(index, period) {
+            if (period < 0) {
+                const start = index + period;
+                const end = index - 1;
+                if (start < 0 || end < 0) return null;
+                return pct(state.priceData[start].close, state.priceData[end].close);
+            }
+
+            if (period === 0) {
+                if (index - 1 < 0) return null;
+                return pct(state.priceData[index - 1].close, state.priceData[index].close);
+            }
+
+            const end = index + period;
+            if (end >= state.priceData.length) return null;
+            return pct(state.priceData[index].close, state.priceData[end].close);
+        }
+
+        function summarizeCases(cases, periods) {
+            return periods.map(period => {
+                const values = cases
+                    .map(item => item.returns[period])
+                    .filter(value => Number.isFinite(value));
+                const sorted = [...values].sort((a, b) => a - b);
+                const up = values.filter(value => value > 0).length;
+                const down = values.filter(value => value < 0).length;
+                const avg = mean(values);
+                return {
+                    period,
+                    label: formatPeriod(period),
+                    count: values.length,
+                    up,
+                    down,
+                    winRate: values.length ? up / values.length * 100 : null,
+                    avg,
+                    median: median(sorted),
+                    max: sorted.length ? sorted[sorted.length - 1] : null,
+                    min: sorted.length ? sorted[0] : null,
+                    stdev: stdev(values, avg)
+                };
+            });
+        }
+
+        function renderResults() {
+            const run = state.lastRun;
+            if (!run) {
+                renderEmptyState();
+                return;
+            }
+
+            el.resultTitle.textContent = run.title;
+            el.resultSubtitle.textContent = run.subtitle;
+            el.sampleBadge.textContent = `${run.cases.length} 個案例`;
+            renderKpis(run);
+            renderSummaryTable(run.summary);
+            renderCasesTable(run.cases);
+            renderReturnChart();
+            renderHeatmap(run);
+            renderPriceChart(run.cases);
+
+            if (!run.cases.length) {
+                showToast('沒有找到可回測的案例。請調低相似分數，或確認行情期間涵蓋事件日期。');
+            }
+        }
+
+        function renderKpis(run) {
+            const t5 = run.summary.find(row => row.period === 5);
+            const t20 = run.summary.find(row => row.period === 20);
+            const worstCase = run.cases
+                .filter(item => Number.isFinite(item.returns[20]))
+                .sort((a, b) => a.returns[20] - b.returns[20])[0];
+
+            el.kpiCases.textContent = run.cases.length.toString();
+            el.kpiCasesSub.textContent = run.cases.length ? `${run.cases[0].eventDate} 起` : '沒有可用樣本';
+            setPercentKpi(el.kpiT5, el.kpiT5Sub, t5, 'T+5');
+            setPercentKpi(el.kpiT20, el.kpiT20Sub, t20, 'T+20');
+
+            if (worstCase) {
+                setValueClass(el.kpiWorst, worstCase.returns[20]);
+                el.kpiWorst.textContent = formatPct(worstCase.returns[20]);
+                el.kpiWorstSub.textContent = worstCase.name;
+            } else {
+                el.kpiWorst.textContent = '-';
+                el.kpiWorst.className = 'kpi-value neutral';
+                el.kpiWorstSub.textContent = 'T+20 樣本不足';
+            }
+        }
+
+        function setPercentKpi(valueEl, subEl, summary, label) {
+            if (!summary || !summary.count) {
+                valueEl.textContent = '-';
+                valueEl.className = 'kpi-value neutral';
+                subEl.textContent = `${label} 樣本不足`;
+                return;
+            }
+            setValueClass(valueEl, summary.avg);
+            valueEl.textContent = formatPct(summary.avg);
+            subEl.textContent = `勝率 ${summary.winRate.toFixed(1)}% / ${summary.count} 筆`;
+        }
+
+        function setValueClass(node, value) {
+            node.className = `kpi-value ${value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral'}`;
+        }
+
+        function renderCalendarStats() {
+            if (!state.priceData.length) {
+                clearCalendarStats();
+                return;
+            }
+
+            const monthBuckets = Array.from({ length: 12 }, (_, index) => ({
+                label: `${index + 1} 月`,
+                values: []
+            }));
+            const months = new Map();
+
+            state.priceData.forEach((row, index) => {
+                const key = `${row.dateObj.getFullYear()}-${String(row.dateObj.getMonth() + 1).padStart(2, '0')}`;
+                if (!months.has(key)) months.set(key, []);
+                months.get(key).push({ row, index });
+            });
+
+            Array.from(months.keys()).sort().forEach(key => {
+                const entries = months.get(key);
+                const first = entries[0];
+                const last = entries[entries.length - 1];
+                const base = first.index > 0 ? state.priceData[first.index - 1].close : first.row.open;
+                const ret = pct(base, last.row.close);
+                if (Number.isFinite(ret)) {
+                    monthBuckets[last.row.dateObj.getMonth()].values.push(ret);
+                }
+            });
+
+            const weekdayOrder = [1, 2, 3, 4, 5, 6, 0];
+            const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekdayBuckets = new Map(weekdayOrder.map(day => [day, {
+                label: `星期${weekdayNames[day]}`,
+                values: []
+            }]));
+
+            state.priceData.forEach((row, index) => {
+                if (index === 0) return;
+                const ret = pct(state.priceData[index - 1].close, row.close);
+                const bucket = weekdayBuckets.get(row.dateObj.getDay());
+                if (bucket && Number.isFinite(ret)) bucket.values.push(ret);
+            });
+
+            renderCalendarStatsTable(el.monthStatsBody, monthBuckets.map(buildCalendarStat));
+            renderCalendarStatsTable(el.weekdayStatsBody, weekdayOrder
+                .map(day => buildCalendarStat(weekdayBuckets.get(day)))
+                .filter(row => row.count > 0)
+            );
+        }
+
+        function buildCalendarStat(bucket) {
+            const sorted = [...bucket.values].sort((a, b) => a - b);
+            const up = bucket.values.filter(value => value > 0).length;
+            const down = bucket.values.filter(value => value < 0).length;
+            return {
+                label: bucket.label,
+                count: bucket.values.length,
+                up,
+                down,
+                winRate: bucket.values.length ? up / bucket.values.length * 100 : null,
+                lossRate: bucket.values.length ? down / bucket.values.length * 100 : null,
+                avg: mean(bucket.values),
+                median: median(sorted)
+            };
+        }
+
+        function renderCalendarStatsTable(tbody, rows) {
+            const validRows = rows.filter(row => row.count > 0);
+            if (!validRows.length) {
+                tbody.innerHTML = '<tr><td colspan="6">尚無資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = validRows.map(row => `
+                <tr>
+                    <td><strong>${escapeHtml(row.label)}</strong></td>
+                    <td>${row.count}</td>
+                    <td class="${row.winRate >= 50 ? 'positive' : 'negative'}">${row.winRate.toFixed(1)}%</td>
+                    <td class="${row.lossRate >= 50 ? 'negative' : 'neutral'}">${row.lossRate.toFixed(1)}%</td>
+                    <td class="${valueClass(row.avg)}">${formatPct(row.avg)}</td>
+                    <td class="${valueClass(row.median)}">${formatPct(row.median)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function clearCalendarStats() {
+            el.monthStatsBody.innerHTML = '<tr><td colspan="6">尚無資料</td></tr>';
+            el.weekdayStatsBody.innerHTML = '<tr><td colspan="6">尚無資料</td></tr>';
+        }
+
+        function renderSummaryTable(summary) {
+            if (!summary.length) {
+                el.summaryBody.innerHTML = '<tr><td colspan="10">尚無資料</td></tr>';
+                return;
+            }
+
+            el.summaryBody.innerHTML = summary.map(row => `
+                <tr>
+                    <td><strong>${row.label}</strong></td>
+                    <td>${row.count}</td>
+                    <td class="positive">${row.up}</td>
+                    <td class="negative">${row.down}</td>
+                    <td>${row.winRate === null ? '-' : `${row.winRate.toFixed(1)}%`}</td>
+                    <td class="${valueClass(row.avg)}">${formatPct(row.avg)}</td>
+                    <td class="${valueClass(row.median)}">${formatPct(row.median)}</td>
+                    <td class="${valueClass(row.max)}">${formatPct(row.max)}</td>
+                    <td class="${valueClass(row.min)}">${formatPct(row.min)}</td>
+                    <td>${row.stdev === null ? '-' : `${row.stdev.toFixed(2)}%`}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderCasesTable(cases) {
+            if (!cases.length) {
+                el.casesBody.innerHTML = '<tr><td colspan="16">沒有符合條件的歷史案例</td></tr>';
+                return;
+            }
+
+            const sorted = [...cases].sort((a, b) => b.tradingDate.localeCompare(a.tradingDate));
+            el.casesBody.innerHTML = sorted.map(item => `
+                <tr>
+                    <td>
+                        <span class="case-name">
+                            <strong>${escapeHtml(item.name)}</strong>
+                            <span>${CATEGORY_LABELS[item.category] || item.category} · ${POLARITY_LABELS[item.polarity] || item.polarity}</span>
+                        </span>
+                    </td>
+                    <td>${item.eventDate}</td>
+                    <td>${item.tradingDate}${item.calendarLag ? ` +${item.calendarLag}日` : ''}</td>
+                    <td>${Math.round(item.score ?? 100)}</td>
+                    <td class="${valueClass(item.returns[0])}">${formatPct(item.returns[0])}</td>
+                    <td class="${valueClass(item.returns[1])}">${formatPct(item.returns[1])}</td>
+                    <td class="${valueClass(item.returns[2])}">${formatPct(item.returns[2])}</td>
+                    <td class="${valueClass(item.returns[3])}">${formatPct(item.returns[3])}</td>
+                    <td class="${valueClass(item.returns[4])}">${formatPct(item.returns[4])}</td>
+                    <td class="${valueClass(item.returns[5])}">${formatPct(item.returns[5])}</td>
+                    <td class="${valueClass(item.returns[10])}">${formatPct(item.returns[10])}</td>
+                    <td class="${valueClass(item.returns[20])}">${formatPct(item.returns[20])}</td>
+                    <td class="${valueClass(item.returns[30])}">${formatPct(item.returns[30])}</td>
+                    <td class="${valueClass(item.returns[40])}">${formatPct(item.returns[40])}</td>
+                    <td class="${valueClass(item.returns[50])}">${formatPct(item.returns[50])}</td>
+                    <td class="${valueClass(item.returns[60])}">${formatPct(item.returns[60])}</td>
+                    <td>${item.tags.slice(0, 3).map(tag => `<span class="badge">${escapeHtml(tag)}</span>`).join(' ')}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderReturnChart() {
+            const run = state.lastRun;
+            if (!run || !run.summary.length || !run.cases.length) {
+                el.returnChart.classList.add('hidden');
+                el.returnChart.innerHTML = '';
+                el.chartEmpty.classList.remove('hidden');
+                return;
+            }
+
+            el.returnChart.classList.remove('hidden');
+            el.chartEmpty.classList.add('hidden');
+
+            if (state.activeChart === 'dist') {
+                el.returnChart.innerHTML = buildDistributionSvg(run);
+                return;
+            }
+
+            el.returnChart.innerHTML = buildReturnMetricSvg(
+                run.summary,
+                state.activeChart === 'median' ? 'median' : 'avg'
+            );
+        }
+
+        function renderHeatmap(run) {
+            if (!run || !run.cases.length || !run.periods.length) {
+                el.heatmapChart.classList.add('hidden');
+                el.heatmapChart.innerHTML = '';
+                el.heatmapEmpty.classList.remove('hidden');
+                return;
+            }
+
+            const height = Math.max(360, Math.min(980, 112 + run.cases.length * 28));
+            el.heatmapChart.style.height = `${height}px`;
+            el.heatmapChart.classList.remove('hidden');
+            el.heatmapEmpty.classList.add('hidden');
+            el.heatmapChart.innerHTML = buildHeatmapSvg(run, height);
+        }
+
+        function buildHeatmapSvg(run, preferredHeight) {
+            const { width } = chartBox(el.heatmapChart, preferredHeight);
+            const cases = [...run.cases].sort((a, b) => b.tradingDate.localeCompare(a.tradingDate));
+            const periods = run.periods;
+            const leftPad = width < 700 ? 108 : 230;
+            const topPad = 58;
+            const rightPad = 18;
+            const bottomPad = 34;
+            const rowHeight = 26;
+            const gap = 2;
+            const height = Math.max(preferredHeight, topPad + bottomPad + cases.length * rowHeight);
+            const innerWidth = width - leftPad - rightPad;
+            const colWidth = innerWidth / periods.length;
+            const values = cases.flatMap(item => periods.map(period => item.returns[period]).filter(Number.isFinite));
+            const maxAbs = Math.max(1, ...values.map(value => Math.abs(value)));
+
+            const header = periods.map((period, index) => {
+                const x = leftPad + index * colWidth + colWidth / 2;
+                const rotation = periods.length > 16 ? ` transform="rotate(-45 ${x} 40)"` : '';
+                return `<text x="${x}" y="40" text-anchor="middle" font-size="10" font-weight="800" fill="#475467"${rotation}>${escapeHtml(formatPeriod(period))}</text>`;
+            }).join('');
+
+            const rows = cases.map((item, rowIndex) => {
+                const y = topPad + rowIndex * rowHeight;
+                const label = width < 700 ? item.tradingDate : `${item.tradingDate} ${item.name}`;
+                const cells = periods.map((period, colIndex) => {
+                    const value = item.returns[period];
+                    const x = leftPad + colIndex * colWidth;
+                    const fill = heatColor(value, maxAbs);
+                    const textColor = Number.isFinite(value) && Math.abs(value) / maxAbs > 0.62 ? '#ffffff' : '#172033';
+                    const cellText = colWidth < 24 ? '' : `<text x="${x + colWidth / 2}" y="${y + 17}" text-anchor="middle" font-size="9.5" font-weight="800" fill="${textColor}">${formatHeatValue(value)}</text>`;
+                    return `
+                        <rect x="${x + 1}" y="${y}" width="${Math.max(2, colWidth - gap)}" height="${rowHeight - gap}" rx="3" fill="${fill}" stroke="#ffffff">
+                            <title>${escapeHtml(item.name)} / ${formatPeriod(period)} / ${formatPct(value)}</title>
+                        </rect>
+                        ${cellText}
+                    `;
+                }).join('');
+
+                return `
+                    <text x="${leftPad - 8}" y="${y + 17}" text-anchor="end" font-size="11" fill="#475467">${escapeHtml(truncateLabel(label, width < 700 ? 12 : 30))}</text>
+                    ${cells}
+                `;
+            }).join('');
+
+            return `
+                <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="事件熱力圖">
+                    <rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" />
+                    <text x="12" y="34" font-size="12" font-weight="800" fill="#172033">事件</text>
+                    ${header}
+                    <line x1="${leftPad}" y1="${topPad - 10}" x2="${width - rightPad}" y2="${topPad - 10}" stroke="#d9dee7" />
+                    ${rows}
+                </svg>
+            `;
+        }
+
+        function renderPriceChart(cases) {
+            if (!state.priceData.length) {
+                el.priceChart.classList.add('hidden');
+                el.priceChart.innerHTML = '';
+                el.priceChartEmpty.classList.remove('hidden');
+                return;
+            }
+
+            el.priceChart.classList.remove('hidden');
+            el.priceChartEmpty.classList.add('hidden');
+            el.priceChart.innerHTML = buildPriceSvg(cases || []);
+        }
+
+        function buildReturnMetricSvg(summary, metric) {
+            const metricLabel = metric === 'median' ? '中位數' : '平均';
+            const { width, height } = chartBox(el.returnChart, 340);
+            const pad = chartPad(width);
+            const innerWidth = width - pad.left - pad.right;
+            const innerHeight = height - pad.top - pad.bottom;
+            const maxAbs = Math.max(1, ...summary.map(row => Math.abs(row[metric] || 0))) * 1.25;
+            const y = value => pad.top + (maxAbs - value) / (maxAbs * 2) * innerHeight;
+            const zeroY = y(0);
+            const gap = Math.max(3, innerWidth / Math.max(summary.length, 1) * 0.1);
+            const barWidth = Math.max(7, (innerWidth - gap * (summary.length - 1)) / Math.max(summary.length, 1));
+
+            const bars = summary.map((row, index) => {
+                const value = row.count ? row[metric] : 0;
+                const x = pad.left + index * (barWidth + gap);
+                const barY = Math.min(y(value), zeroY);
+                const barHeight = Math.max(2, Math.abs(y(value) - zeroY));
+                const color = value >= 0 ? '#d92d20' : '#16803c';
+                const opacity = row.count ? '0.88' : '0.22';
+                const labelY = value >= 0 ? barY - 7 : barY + barHeight + 14;
+                const labelAnchor = summary.length > 14 || width < 980 ? ` transform="rotate(-45 ${x + barWidth / 2} ${height - pad.bottom + 24})"` : '';
+                const valueText = barWidth < 18 ? '' : `<text x="${(x + barWidth / 2).toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="${color}">${row.count ? formatPct(row.avg) : '-'}</text>`;
+
+                return `
+                    <rect x="${x.toFixed(1)}" y="${barY.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="3" fill="${color}" opacity="${opacity}">
+                        <title>${escapeHtml(row.label)} ${metricLabel} ${formatPct(row[metric])}，樣本 ${row.count}</title>
+                    </rect>
+                    ${valueText}
+                    <text x="${(x + barWidth / 2).toFixed(1)}" y="${height - pad.bottom + 24}" text-anchor="middle" font-size="11" fill="#667085"${labelAnchor}>${escapeHtml(row.label)}</text>
+                `;
+            }).join('');
+
+            return `
+                <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="事件窗口${metricLabel}報酬圖">
+                    ${axisSvg(width, height, pad, [-maxAbs, 0, maxAbs], y, `${metricLabel}報酬率 %`)}
+                    <line x1="${pad.left}" y1="${zeroY}" x2="${width - pad.right}" y2="${zeroY}" stroke="#98a2b3" stroke-width="1" />
+                    ${bars}
+                </svg>
+            `;
+        }
+
+        function buildDistributionSvg(run) {
+            const { width, height } = chartBox(el.returnChart, 340);
+            const pad = chartPad(width);
+            const rows = run.summary.filter(row => row.count);
+            const allValues = rows.flatMap(row => run.cases.map(item => item.returns[row.period]).filter(Number.isFinite));
+            if (!allValues.length) return emptySvg(width, height, '沒有可用的分布資料');
+
+            const minValue = Math.min(...allValues);
+            const maxValue = Math.max(...allValues);
+            const span = Math.max(1, maxValue - minValue);
+            const minYValue = minValue - span * 0.14;
+            const maxYValue = maxValue + span * 0.14;
+            const innerWidth = width - pad.left - pad.right;
+            const innerHeight = height - pad.top - pad.bottom;
+            const xStep = innerWidth / Math.max(rows.length, 1);
+            const y = value => pad.top + (maxYValue - value) / (maxYValue - minYValue) * innerHeight;
+
+            const groups = rows.map((row, periodIndex) => {
+                const values = run.cases
+                    .map(item => item.returns[row.period])
+                    .filter(Number.isFinite)
+                    .sort((a, b) => a - b);
+                const centerX = pad.left + xStep * periodIndex + xStep / 2;
+                const boxWidth = Math.min(44, Math.max(22, xStep * 0.36));
+                const min = values[0];
+                const max = values[values.length - 1];
+                const q1 = quantile(values, 0.25);
+                const med = quantile(values, 0.5);
+                const q3 = quantile(values, 0.75);
+                const top = y(q3);
+                const bottom = y(q1);
+                const boxHeight = Math.max(4, bottom - top);
+                const dots = values.map((value, valueIndex) => {
+                    const jitter = ((valueIndex % 7) - 3) * Math.min(4, xStep * 0.035);
+                    return `<circle cx="${(centerX + jitter).toFixed(1)}" cy="${y(value).toFixed(1)}" r="2.5" fill="#2563eb" opacity="0.42"><title>${escapeHtml(row.label)} ${formatPct(value)}</title></circle>`;
+                }).join('');
+
+                return `
+                    <line x1="${centerX}" y1="${y(min)}" x2="${centerX}" y2="${y(max)}" stroke="#98a2b3" stroke-width="1.2" />
+                    <line x1="${centerX - boxWidth / 2}" y1="${y(min)}" x2="${centerX + boxWidth / 2}" y2="${y(min)}" stroke="#98a2b3" stroke-width="1.2" />
+                    <line x1="${centerX - boxWidth / 2}" y1="${y(max)}" x2="${centerX + boxWidth / 2}" y2="${y(max)}" stroke="#98a2b3" stroke-width="1.2" />
+                    <rect x="${centerX - boxWidth / 2}" y="${top}" width="${boxWidth}" height="${boxHeight}" rx="3" fill="#eff6ff" stroke="#2563eb" />
+                    <line x1="${centerX - boxWidth / 2}" y1="${y(med)}" x2="${centerX + boxWidth / 2}" y2="${y(med)}" stroke="#172033" stroke-width="2" />
+                    ${dots}
+                    <text x="${centerX}" y="${height - pad.bottom + 24}" text-anchor="middle" font-size="11" fill="#667085">${escapeHtml(row.label)}</text>
+                `;
+            }).join('');
+
+            return `
+                <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="事件窗口報酬分布圖">
+                    ${axisSvg(width, height, pad, [minYValue, 0, maxYValue], y, '報酬率 %')}
+                    <line x1="${pad.left}" y1="${y(0)}" x2="${width - pad.right}" y2="${y(0)}" stroke="#98a2b3" stroke-dasharray="4 4" />
+                    ${groups}
+                </svg>
+            `;
+        }
+
+        function buildPriceSvg(cases) {
+            const { width, height } = chartBox(el.priceChart, 430);
+            const pad = chartPad(width);
+            const data = state.priceData;
+            if (!data.length) return emptySvg(width, height, '載入行情資料後顯示');
+
+            const closes = data.map(row => row.close);
+            const minClose = Math.min(...closes);
+            const maxClose = Math.max(...closes);
+            const span = Math.max(1, maxClose - minClose);
+            const minYValue = minClose - span * 0.08;
+            const maxYValue = maxClose + span * 0.08;
+            const innerWidth = width - pad.left - pad.right;
+            const innerHeight = height - pad.top - pad.bottom;
+            const x = index => pad.left + (data.length === 1 ? 0 : index / (data.length - 1) * innerWidth);
+            const y = value => pad.top + (maxYValue - value) / (maxYValue - minYValue) * innerHeight;
+            const step = Math.max(1, Math.ceil(data.length / Math.max(420, width)));
+            const sampled = data
+                .map((row, index) => ({ row, index }))
+                .filter(item => item.index % step === 0 || item.index === data.length - 1);
+            const path = sampled.map((item, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'} ${x(item.index).toFixed(1)} ${y(item.row.close).toFixed(1)}`).join(' ');
+            const markers = cases.filter(item => Number.isInteger(item.tradingIndex)).map(item => {
+                const row = data[item.tradingIndex];
+                return `
+                    <circle cx="${x(item.tradingIndex).toFixed(1)}" cy="${y(row.close).toFixed(1)}" r="4.5" fill="#f59e0b" stroke="#7c2d12" stroke-width="1.2">
+                        <title>${escapeHtml(item.name)} / ${item.tradingDate} / ${row.close.toFixed(2)}</title>
+                    </circle>
+                `;
+            }).join('');
+
+            return `
+                <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="行情與事件位置圖">
+                    ${axisSvg(width, height, pad, [minYValue, (minYValue + maxYValue) / 2, maxYValue], y, '收盤價')}
+                    <path d="${path}" fill="none" stroke="#2563eb" stroke-width="1.6" />
+                    ${markers}
+                    <text x="${pad.left}" y="${height - 12}" text-anchor="start" font-size="11" fill="#667085">${data[0].date}</text>
+                    <text x="${width - pad.right}" y="${height - 12}" text-anchor="end" font-size="11" fill="#667085">${data[data.length - 1].date}</text>
+                    <text x="${pad.left}" y="${pad.top - 6}" font-size="12" font-weight="800" fill="#2563eb">${escapeHtml(state.marketSymbol)}</text>
+                    ${cases.length ? `<text x="${width - pad.right}" y="${pad.top - 6}" text-anchor="end" font-size="12" fill="#b45309">${cases.length} 個事件點</text>` : ''}
+                </svg>
+            `;
+        }
+
+        function chartBox(node, fallbackHeight) {
+            const width = Math.max(320, Math.round(node.clientWidth || 860));
+            const height = Math.max(260, Math.round(node.clientHeight || fallbackHeight));
+            return { width, height };
+        }
+
+        function chartPad(width) {
+            return width < 640
+                ? { top: 24, right: 16, bottom: 72, left: 48 }
+                : { top: 28, right: 24, bottom: 72, left: 64 };
+        }
+
+        function axisSvg(width, height, pad, ticks, yScale, label) {
+            const chartRight = width - pad.right;
+            const chartBottom = height - pad.bottom;
+            const yTicks = ticks.map(value => {
+                const y = yScale(value);
+                return `
+                    <line x1="${pad.left}" y1="${y}" x2="${chartRight}" y2="${y}" stroke="#edf0f5" />
+                    <text x="${pad.left - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#667085">${shortNumber(value)}</text>
+                `;
+            }).join('');
+
+            return `
+                <rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" />
+                ${yTicks}
+                <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${chartBottom}" stroke="#cbd5e1" />
+                <line x1="${pad.left}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="#cbd5e1" />
+                <text x="16" y="${pad.top}" transform="rotate(-90 16 ${pad.top})" font-size="11" fill="#667085">${escapeHtml(label)}</text>
+            `;
+        }
+
+        function emptySvg(width, height, message) {
+            return `
+                <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(message)}">
+                    <rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" />
+                    <text x="${width / 2}" y="${height / 2}" text-anchor="middle" font-size="13" fill="#667085">${escapeHtml(message)}</text>
+                </svg>
+            `;
+        }
+
+        function renderEmptyState() {
+            el.resultTitle.textContent = '尚未開始分析';
+            el.resultSubtitle.textContent = '載入行情資料後選擇事件主題。';
+            el.sampleBadge.textContent = '0 個案例';
+            el.kpiCases.textContent = '-';
+            el.kpiCasesSub.textContent = '等待行情資料';
+            el.kpiT5.textContent = '-';
+            el.kpiT5Sub.textContent = '-';
+            el.kpiT20.textContent = '-';
+            el.kpiT20Sub.textContent = '-';
+            el.kpiWorst.textContent = '-';
+            el.kpiWorstSub.textContent = '-';
+            clearCalendarStats();
+            el.summaryBody.innerHTML = '<tr><td colspan="10">尚無資料</td></tr>';
+            el.casesBody.innerHTML = '<tr><td colspan="16">尚無資料</td></tr>';
+            el.returnChart.classList.add('hidden');
+            el.chartEmpty.classList.remove('hidden');
+            el.heatmapChart.classList.add('hidden');
+            el.heatmapChart.innerHTML = '';
+            el.heatmapEmpty.classList.remove('hidden');
+            renderPriceChart([]);
+        }
+
+        function flattenEventCatalog() {
+            return PRESET_EVENTS.flatMap(preset => preset.dates.map(([date, name]) => ({
+                id: `${preset.id}_${date}`,
+                source: preset.name,
+                name,
+                date,
+                category: preset.category,
+                region: preset.region,
+                polarity: preset.polarity,
+                severity: preset.severity,
+                tags: preset.tags
+            })));
+        }
+
+        function annualDates(startYear, endYear, month, day, label) {
+            const rows = [];
+            for (let year = startYear; year <= endYear; year++) {
+                rows.push([`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`, `${year} ${label}`]);
+            }
+            return rows;
+        }
+
+        function scoreSimilarity(event, profile) {
+            let score = 0;
+            if (event.category === profile.category) score += 28;
+            if (event.polarity === profile.polarity) score += 20;
+            if (event.region === profile.region) score += 14;
+            if (event.region === 'global' || profile.region === 'global') score += 6;
+
+            const overlap = profile.tags.filter(tag => event.tags.includes(tag)).length;
+            const union = new Set([...profile.tags, ...event.tags]).size || 1;
+            score += 26 * (overlap / union);
+            score += Math.max(0, 12 - Math.abs(event.severity - profile.severity) * 3);
+            return Math.min(100, score);
+        }
+
+        function getSelectedPeriods() {
+            const periods = new Set();
+            document.querySelectorAll('.period-check:checked').forEach(input => {
+                String(input.dataset.periods || input.value || '')
+                    .split(',')
+                    .map(value => Number(value.trim()))
+                    .filter(Number.isFinite)
+                    .forEach(value => periods.add(value));
+            });
+            return Array.from(periods).sort((a, b) => a - b);
+        }
+
+        function findTradingIndexOnOrAfter(dateObj) {
+            const target = normalizeDate(dateObj).getTime();
+            let low = 0;
+            let high = state.priceData.length - 1;
+            let found = -1;
+
+            while (low <= high) {
+                const mid = Math.floor((low + high) / 2);
+                const time = state.priceData[mid].dateObj.getTime();
+                if (time >= target) {
+                    found = mid;
+                    high = mid - 1;
+                } else {
+                    low = mid + 1;
+                }
+            }
+            return found;
+        }
+
+        function exportCases() {
+            const run = state.lastRun;
+            if (!run || !run.cases.length) {
+                showToast('目前沒有可匯出的案例。');
+                return;
+            }
+
+            const columns = ['name', 'eventDate', 'tradingDate', 'score', 'T0', 'T1', 'T5', 'T20', 'T60', 'tags'];
+            const rows = run.cases.map(item => ({
+                name: item.name,
+                eventDate: item.eventDate,
+                tradingDate: item.tradingDate,
+                score: Math.round(item.score ?? 100),
+                T0: item.returns[0],
+                T1: item.returns[1],
+                T5: item.returns[5],
+                T20: item.returns[20],
+                T60: item.returns[60],
+                tags: item.tags.join('|')
+            }));
+            const csv = unparseCsv(rows, columns);
+            const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `event-market-analysis-${state.marketSymbol.replace(/[^\w.-]+/g, '_')}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetView() {
+            state.lastRun = null;
+            setMode('preset');
+            el.presetSelect.value = PRESET_EVENTS[0].id;
+            renderPresetDetail();
+            renderEmptyState();
+            showToast('畫面已重設。');
+        }
+
+        function clearCache() {
+            Object.keys(localStorage)
+                .filter(key => key.startsWith('market_cache_'))
+                .forEach(key => localStorage.removeItem(key));
+            showToast('行情快取已清除。');
+        }
+
+        function ensureData() {
+            if (!state.priceData.length) {
+                showToast('請先載入行情資料。');
+                return false;
+            }
+            return true;
+        }
+
+        function updateDataStatus(type, message) {
+            el.dataStatus.className = `status ${type || ''}`;
+            el.dataStatus.textContent = message;
+        }
+
+        function showToast(message) {
+            el.toast.textContent = message;
+            el.toast.classList.add('show');
+            window.clearTimeout(showToast.timer);
+            showToast.timer = window.setTimeout(() => el.toast.classList.remove('show'), 2800);
+        }
+
+        function getFreshCache(key) {
+            const payload = localStorage.getItem(key);
+            const timestamp = localStorage.getItem(`${key}_time`);
+            if (!payload || !timestamp) return null;
+            const age = Date.now() - Number(timestamp);
+            return age < 12 * 60 * 60 * 1000 ? payload : null;
+        }
+
+        function setCache(key, payload) {
+            try {
+                localStorage.setItem(key, payload);
+                localStorage.setItem(`${key}_time`, Date.now().toString());
+            } catch (error) {
+                console.warn('Cache skipped', error);
+            }
+        }
+
+        function setSelectedTags(tags) {
+            Array.from(el.tagSelect.options).forEach(option => {
+                option.selected = tags.includes(option.value);
+            });
+        }
+
+        function parseDate(value) {
+            if (!value) return null;
+            if (value instanceof Date) return normalizeDate(value);
+            const text = String(value).trim().split(/[T ]/)[0].replace(/\./g, '-').replace(/\//g, '-');
+            const parts = text.split('-').map(Number);
+            if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+            let [year, month, day] = parts;
+            if (year < 100) year += year > 30 ? 1900 : 2000;
+            return normalizeDate(new Date(year, month - 1, day));
+        }
+
+        function normalizeDate(dateObj) {
+            return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+        }
+
+        function formatDate(dateObj) {
+            const date = normalizeDate(dateObj);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatPeriod(period) {
+            if (period < 0) return `T${period}`;
+            if (period === 0) return 'T=0';
+            return `T+${period}`;
+        }
+
+        function pct(start, end) {
+            if (!Number.isFinite(start) || !Number.isFinite(end) || start === 0) return null;
+            return (end - start) / start * 100;
+        }
+
+        function mean(values) {
+            if (!values.length) return null;
+            return values.reduce((sum, value) => sum + value, 0) / values.length;
+        }
+
+        function median(sortedValues) {
+            if (!sortedValues.length) return null;
+            const mid = Math.floor(sortedValues.length / 2);
+            if (sortedValues.length % 2) return sortedValues[mid];
+            return (sortedValues[mid - 1] + sortedValues[mid]) / 2;
+        }
+
+        function quantile(sortedValues, q) {
+            if (!sortedValues.length) return null;
+            const pos = (sortedValues.length - 1) * q;
+            const base = Math.floor(pos);
+            const rest = pos - base;
+            if (sortedValues[base + 1] !== undefined) {
+                return sortedValues[base] + rest * (sortedValues[base + 1] - sortedValues[base]);
+            }
+            return sortedValues[base];
+        }
+
+        function stdev(values, avg) {
+            if (!values.length || avg === null) return null;
+            const variance = values.reduce((sum, value) => sum + Math.pow(value - avg, 2), 0) / values.length;
+            return Math.sqrt(variance);
+        }
+
+        function formatPct(value) {
+            if (!Number.isFinite(value)) return '-';
+            return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+        }
+
+        function formatHeatValue(value) {
+            if (!Number.isFinite(value)) return '-';
+            return `${value > 0 ? '+' : ''}${value.toFixed(1)}`;
+        }
+
+        function heatColor(value, maxAbs) {
+            if (!Number.isFinite(value) || maxAbs <= 0) return '#f8fafc';
+            const intensity = Math.min(1, Math.abs(value) / maxAbs);
+            const alpha = 0.18 + intensity * 0.72;
+            return value >= 0
+                ? `rgba(217, 45, 32, ${alpha.toFixed(3)})`
+                : `rgba(22, 128, 60, ${alpha.toFixed(3)})`;
+        }
+
+        function truncateLabel(value, maxLength) {
+            const text = String(value || '');
+            return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+        }
+
+        function shortNumber(value) {
+            if (!Number.isFinite(value)) return '-';
+            const abs = Math.abs(value);
+            if (abs >= 10000) return Math.round(value).toLocaleString();
+            if (abs >= 100) return value.toFixed(0);
+            if (abs >= 10) return value.toFixed(1);
+            return value.toFixed(2);
+        }
+
+        function valueClass(value) {
+            if (!Number.isFinite(value) || value === 0) return 'neutral';
+            return value > 0 ? 'positive' : 'negative';
+        }
+
+        function pick(row, keys) {
+            for (const key of keys) {
+                if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
+            }
+            return null;
+        }
+
+        function pickNumber(row, keys) {
+            const value = pick(row, keys);
+            if (value === null) return null;
+            const parsed = Number(String(value).replace(/,/g, ''));
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function parseCsv(text) {
+            const cleanText = String(text || '').replace(/^\uFEFF/, '');
+            const firstLine = cleanText.split(/\r?\n/, 1)[0] || '';
+            const delimiter = (firstLine.match(/\t/g) || []).length > (firstLine.match(/,/g) || []).length ? '\t' : ',';
+            const rows = [];
+            let row = [];
+            let field = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < cleanText.length; i++) {
+                const char = cleanText[i];
+                const next = cleanText[i + 1];
+
+                if (inQuotes) {
+                    if (char === '"' && next === '"') {
+                        field += '"';
+                        i++;
+                    } else if (char === '"') {
+                        inQuotes = false;
+                    } else {
+                        field += char;
+                    }
+                    continue;
+                }
+
+                if (char === '"') {
+                    inQuotes = true;
+                } else if (char === delimiter) {
+                    row.push(field);
+                    field = '';
+                } else if (char === '\n') {
+                    row.push(field);
+                    rows.push(row);
+                    row = [];
+                    field = '';
+                } else if (char !== '\r') {
+                    field += char;
+                }
+            }
+
+            if (field || row.length) {
+                row.push(field);
+                rows.push(row);
+            }
+
+            const header = (rows.shift() || []).map(cell => cell.trim());
+            if (!header.length) throw new Error('缺少欄位標題');
+            return rows
+                .filter(cells => cells.some(cell => String(cell).trim() !== ''))
+                .map(cells => Object.fromEntries(header.map((key, index) => [key, cells[index] ?? ''])));
+        }
+
+        function unparseCsv(rows, columns) {
+            const escapeCell = value => {
+                if (value === null || value === undefined) return '';
+                const text = String(value);
+                return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+            };
+            return [
+                columns.map(escapeCell).join(','),
+                ...rows.map(row => columns.map(column => escapeCell(row[column])).join(','))
+            ].join('\n');
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function debounce(fn, delay) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), delay);
+            };
+        }
+
+        window.eventMarketApp = {
+            setPriceData,
+            runPresetAnalysis,
+            runSimilarAnalysis,
+            formatDate,
+            parseDate
+        };
+
+        init();
+    </script>
+</body>
+</html>
