@@ -2281,8 +2281,10 @@
 
         async function loadYahooData() {
             const symbol = el.symbolInput.value.trim() || '^TWII';
-            const startYear = 1987;
-            const cacheKey = `market_cache_${symbol}_${startYear}`;
+            const taiwanStockId = getTaiwanStockId(symbol);
+            const cacheKey = taiwanStockId
+                ? `market_cache_${symbol}_finmind_daily_v1`
+                : `market_cache_${symbol}_max_daily_v2`;
             state.marketSymbol = symbol;
             updateDataStatus('warn', `載入 ${symbol} 行情資料中...`);
             el.loadYahooBtn.disabled = true;
@@ -2294,11 +2296,9 @@
                     rows = JSON.parse(cached);
                     updateDataStatus('ok', `已讀取 ${symbol} 本地快取。`);
                 } else {
-                    const period1 = Math.floor(new Date(startYear, 0, 1).getTime() / 1000);
-                    const period2 = Math.floor(Date.now() / 1000);
-                    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1d&events=history&includeAdjustedClose=true`;
-                    const text = await fetchThroughMirrors(url, 'json');
-                    rows = parseYahooChart(text);
+                    rows = taiwanStockId
+                        ? await fetchFinMindTaiwanRows(taiwanStockId)
+                        : await fetchYahooRows(symbol);
                     setCache(cacheKey, JSON.stringify(rows));
                 }
 
@@ -2399,6 +2399,25 @@
                 .finally(() => window.clearTimeout(timer));
         }
 
+        async function fetchYahooRows(symbol) {
+            const period2 = Math.floor(Date.now() / 1000);
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=0&period2=${period2}&interval=1d&events=history&includeAdjustedClose=true`;
+            const text = await fetchThroughMirrors(url, 'json');
+            return parseYahooChart(text);
+        }
+
+        async function fetchFinMindTaiwanRows(stockId) {
+            const endDate = formatDate(new Date());
+            const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${encodeURIComponent(stockId)}&start_date=2000-01-01&end_date=${endDate}`;
+            const text = await fetchThroughMirrors(url, 'json');
+            return parseFinMindTaiwanStockPrice(text);
+        }
+
+        function getTaiwanStockId(symbol) {
+            const match = String(symbol || '').trim().toUpperCase().match(/^(\d{4,6})(?:\.(?:TW|TWO))?$/);
+            return match ? match[1] : null;
+        }
+
         function parseYahooChart(text) {
             const json = JSON.parse(text);
             const result = json?.chart?.result?.[0];
@@ -2424,6 +2443,26 @@
                 });
             });
 
+            return rows;
+        }
+
+        function parseFinMindTaiwanStockPrice(text) {
+            const json = JSON.parse(text);
+            if (json?.status !== 200) throw new Error(json?.msg || 'FinMind data unavailable');
+            const rows = (json.data || []).map(row => {
+                const dateObj = parseDate(row.date);
+                return {
+                    dateObj,
+                    date: dateObj ? formatDate(dateObj) : row.date,
+                    open: Number(row.open),
+                    high: Number(row.max),
+                    low: Number(row.min),
+                    close: Number(row.close),
+                    volume: Number(row.Trading_Volume || 0)
+                };
+            }).filter(row => row.dateObj && Number.isFinite(row.close));
+
+            if (!rows.length) throw new Error('FinMind returned no daily rows');
             return rows;
         }
 
