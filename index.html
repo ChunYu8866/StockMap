@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>事件股市分析台</title>
+    <title>股市事件交易分析</title>
     <style>
         :root {
             --bg: #f6f7f9;
@@ -534,6 +534,39 @@
             background: var(--red-soft);
         }
 
+        .preset-symbols {
+            display: grid;
+            gap: 8px;
+            margin: -2px 0 12px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .preset-symbols-title {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .symbol-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .symbol-chip {
+            min-height: 30px;
+            border: 1px solid #bfdbfe;
+            border-radius: 999px;
+            background: var(--blue-soft);
+            color: var(--blue);
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
         .table-wrap {
             width: 100%;
             overflow: auto;
@@ -547,16 +580,117 @@
         .table-wrap.compact table {
             min-width: 520px;
             font-size: 12px;
+            table-layout: fixed;
+        }
+
+        .table-wrap.compact tr {
+            height: 40px;
         }
 
         .table-wrap.compact th,
         .table-wrap.compact td {
-            padding: 8px 9px;
+            height: 40px;
+            padding: 0 9px;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .seasonality-table:not(.is-day-split) th,
+        .seasonality-table:not(.is-day-split) td {
+            width: 16.6667%;
+        }
+
+        .table-wrap.compact table.is-day-split {
+            min-width: 640px;
+        }
+
+        .table-wrap.compact table.is-day-split th,
+        .table-wrap.compact table.is-day-split td {
+            width: 12.5%;
+        }
+
+        .table-wrap.compact table.is-day-split th:nth-child(5),
+        .table-wrap.compact table.is-day-split td:nth-child(5) {
+            text-align: center;
+        }
+
+        .seasonality-tools {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .seasonality-tools .segment {
+            min-height: 28px;
+            padding: 5px 9px;
+        }
+
+        .seasonality-heatmap {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .seasonality-heatmap.is-weekday {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .seasonality-heatmap.is-day {
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+        }
+
+        .seasonality-heat-cell {
+            min-height: 72px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 9px 10px;
+            display: grid;
+            align-content: space-between;
+            gap: 6px;
+        }
+
+        .seasonality-heat-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .seasonality-heat-sample {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .seasonality-heat-value {
+            font-size: 18px;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .seasonality-heat-rate {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .seasonality-empty {
+            grid-column: 1 / -1;
+            min-height: 112px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            font-size: 13px;
         }
 
         .seasonality-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
         }
 
@@ -648,14 +782,6 @@
             padding: 24px;
         }
 
-        .footer {
-            margin-top: 16px;
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.6;
-            text-align: center;
-        }
-
         .toast {
             position: fixed;
             right: 16px;
@@ -726,6 +852,16 @@
                 flex-direction: column;
             }
 
+            .seasonality-tools {
+                justify-content: flex-start;
+            }
+
+            .seasonality-heatmap,
+            .seasonality-heatmap.is-weekday,
+            .seasonality-heatmap.is-day {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
             .tabs {
                 width: 100%;
             }
@@ -765,6 +901,11 @@
             .period-action {
                 flex: 1;
             }
+
+            .seasonality-heatmap,
+            .seasonality-heatmap.is-weekday,
+            .seasonality-heatmap.is-day {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             table {
@@ -777,8 +918,7 @@
     <main class="app">
         <header class="topbar">
             <div>
-                <p class="eyebrow">EVENT MARKET STUDY</p>
-                <h1>事件股市分析台</h1>
+                <h1>股市事件交易分析</h1>
             </div>
             <div class="toolbar">
                 <button class="btn btn-ghost" id="resetViewBtn" title="重設畫面">
@@ -811,7 +951,7 @@
                             <label for="csvFileInput">CSV 匯入</label>
                             <input id="csvFileInput" type="file" accept=".csv,text/csv">
                         </div>
-                        <p class="status" id="dataStatus">可載入 Yahoo 圖表資料，或匯入含 Date、Close 欄位的 CSV。</p>
+                        <p class="status" id="dataStatus">尚未載入</p>
                     </div>
                 </section>
 
@@ -834,13 +974,15 @@
                     </div>
                     <div class="panel-body">
                         <div class="field">
+                            <label for="presetGroupSelect">事件分類</label>
+                            <select id="presetGroupSelect"></select>
+                        </div>
+                        <div class="field">
                             <label for="presetSelect">事件主題</label>
                             <select id="presetSelect"></select>
                         </div>
-                        <div class="field">
-                            <label for="presetDetail">主題描述</label>
-                            <textarea id="presetDetail" readonly></textarea>
-                        </div>
+                        <textarea id="presetDetail" class="hidden" readonly aria-hidden="true"></textarea>
+                        <div class="preset-symbols hidden" id="presetSymbols"></div>
                         <button class="btn btn-primary" id="runPresetBtn">
                             分析事件庫
                         </button>
@@ -917,9 +1059,46 @@
             <section class="stack">
                 <section class="panel">
                     <div class="panel-header">
+                        <h2 class="panel-title">漲跌統計</h2>
+                        <div class="segmented" aria-label="漲跌統計類型">
+                            <button class="segment active" data-seasonality="month" type="button">月份</button>
+                            <button class="segment" data-seasonality="weekday" type="button">星期</button>
+                            <button class="segment" data-seasonality="day" type="button">日期</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="seasonality-tools">
+                            <div class="segmented" aria-label="漲跌統計顯示方式">
+                                <button class="segment active" data-seasonality-view="table" type="button">表格</button>
+                                <button class="segment" data-seasonality-view="heatmap" type="button">熱力圖</button>
+                            </div>
+                        </div>
+                        <div class="table-wrap compact" id="seasonalityTableWrap">
+                            <table id="seasonalityTable" class="seasonality-table">
+                                <thead>
+                                    <tr id="seasonalityHeadRow">
+                                        <th>月份</th>
+                                        <th>樣本</th>
+                                        <th>上漲率</th>
+                                        <th>下跌率</th>
+                                        <th>平均</th>
+                                        <th>中位數</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="seasonalityStatsBody">
+                                    <tr><td colspan="6">尚無資料</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="seasonality-heatmap hidden" id="seasonalityHeatmap"></div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
                         <div>
                             <h2 class="panel-title" id="resultTitle">尚未開始分析</h2>
-                            <p class="section-note" id="resultSubtitle">載入行情資料後選擇事件主題。</p>
+                            <p class="section-note hidden" id="resultSubtitle"></p>
                         </div>
                         <div class="badge-row">
                             <span class="badge blue" id="marketBadge">^TWII</span>
@@ -947,57 +1126,6 @@
                                 <div class="kpi-label">最差 T+20</div>
                                 <div class="kpi-value" id="kpiWorst">-</div>
                                 <div class="kpi-detail" id="kpiWorstSub">-</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">月份 / 星期漲跌統計</h2>
-                        <span class="badge blue">勝率與漲跌幅</span>
-                    </div>
-                    <div class="panel-body">
-                        <div class="seasonality-grid">
-                            <div>
-                                <h3 class="mini-title">每月表現</h3>
-                                <div class="table-wrap compact">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>月份</th>
-                                                <th>樣本</th>
-                                                <th>上漲率</th>
-                                                <th>下跌率</th>
-                                                <th>平均漲跌幅</th>
-                                                <th>中位數</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="monthStatsBody">
-                                            <tr><td colspan="6">尚無資料</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div>
-                                <h3 class="mini-title">星期表現</h3>
-                                <div class="table-wrap compact">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>星期</th>
-                                                <th>樣本</th>
-                                                <th>上漲率</th>
-                                                <th>下跌率</th>
-                                                <th>平均漲跌幅</th>
-                                                <th>中位數</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="weekdayStatsBody">
-                                            <tr><td colspan="6">尚無資料</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1104,13 +1232,11 @@
                     </div>
                     <div class="panel-body">
                         <div id="priceChart" class="chart tall"></div>
-                        <div id="priceChartEmpty" class="empty">載入行情資料後顯示。</div>
+                        <div id="priceChartEmpty" class="empty">尚無資料</div>
                     </div>
                 </section>
             </section>
         </section>
-
-        <p class="footer">本工具只呈現歷史統計與樣本分布，不構成投資建議。事件樣本有限，市場結構、利率、估值與資金環境都可能改變結果。</p>
     </main>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1124,7 +1250,8 @@
             pandemic: '疫情災害',
             calendar: '節慶季節',
             trade: '貿易科技',
-            market: '市場波動'
+            market: '市場波動',
+            earnings: '個股財報'
         };
 
         const POLARITY_LABELS = {
@@ -1140,7 +1267,7 @@
             '戰爭', '恐攻', '疫情', '金融壓力', '信用風險', '央行', '升息',
             '政策', '貿易戰', '科技鏈', '假期', '開紅盤', '季節性', '高波動',
             '系統性風險', '外資', '匯率', '降息', 'Fed', '主席交接', '清明',
-            '端午', '中秋', '元旦', '台海', '地緣政治'
+            '端午', '中秋', '元旦', '台海', '地緣政治', '財報', '半導體', 'AI', '個股'
         ];
 
         const PERIOD_GROUPS = [
@@ -1148,7 +1275,74 @@
             { id: 'long', name: '回測長天期', detail: '±60 / ±50 / ±40 / ±30 / ±20', days: [60, 50, 40, 30, 20] }
         ];
 
+        const PRESET_GROUPS = [
+            {
+                id: 'none',
+                name: '無事件',
+                presets: ['no_event']
+            },
+            {
+                id: 'taiwan_politics',
+                name: '台灣政治',
+                presets: ['tw_presidential_election', 'taiwan_inauguration', 'taiwan_strait_events']
+            },
+            {
+                id: 'us_politics',
+                name: '美國政治',
+                presets: ['us_presidential_election']
+            },
+            {
+                id: 'calendar_seasonal',
+                name: '節慶季節',
+                presets: ['lunar_new_year_open', 'roc_new_year', 'qingming_holiday', 'dragon_boat_holiday', 'mid_autumn_holiday']
+            },
+            {
+                id: 'major_risk',
+                name: '大型風險',
+                presets: ['major_risk_events', 'regional_bank_stress_2023', 'inflation_cpi_shocks', 'terror_security_events', 'geopolitical_war_events']
+            },
+            {
+                id: 'us_fed',
+                name: '美國聯準會',
+                presets: ['fed_chair_transition', 'fed_rate_hikes', 'fed_rate_cuts', 'policy_rate_events']
+            },
+            {
+                id: 'trade_tech',
+                name: '貿易科技鏈',
+                presets: ['trade_tech_events', 'ai_chip_export_controls']
+            },
+            {
+                id: 'ai_industry',
+                name: 'AI 產業事件',
+                presets: ['ai_platform_breakthroughs']
+            },
+            {
+                id: 'earnings',
+                name: '財報事件',
+                presets: [
+                    'nvidia_earnings_ai_cycle',
+                    'tsmc_earnings_ai_cycle',
+                    'amd_earnings_ai_accelerator',
+                    'asml_earnings_semicap_equipment',
+                    'microsoft_earnings_cloud_ai',
+                    'apple_earnings_product_cycle'
+                ]
+            }
+        ];
+
         const PRESET_EVENTS = [
+            {
+                id: 'no_event',
+                name: '無事件',
+                description: '只看行情的月份、星期、日期漲跌統計。',
+                category: 'market',
+                region: 'global',
+                polarity: 'mixed',
+                severity: 1,
+                tags: ['季節性'],
+                dates: [],
+                skipAnalysis: true
+            },
             {
                 id: 'tw_presidential_election',
                 name: '台灣總統大選後首個交易日',
@@ -1551,6 +1745,258 @@
                     ['2020-05-15', '美國擴大華為出口限制'],
                     ['2022-10-07', '美國半導體出口管制新規']
                 ]
+            },
+            {
+                id: 'ai_chip_export_controls',
+                name: 'AI 晶片出口管制',
+                description: '以美國對先進運算晶片、半導體設備與 AI 擴散規則的主要公告日作為事件 T=0。',
+                category: 'trade',
+                region: 'global',
+                polarity: 'riskOff',
+                severity: 4,
+                tags: ['美國', '中國', '科技鏈', '半導體', 'AI', '政策', '高波動'],
+                dates: [
+                    ['2022-10-07', 'BIS 先進運算與半導體設備出口管制'],
+                    ['2023-10-17', 'BIS 更新先進運算晶片出口管制'],
+                    ['2024-12-02', '美國對中國半導體設備與 HBM 管制升級'],
+                    ['2025-01-13', '美國 AI Diffusion 出口管制規則'],
+                    ['2025-04-15', 'NVIDIA H20 對中出口許可限制揭露']
+                ]
+            },
+            {
+                id: 'regional_bank_stress_2023',
+                name: '2023 區域銀行壓力',
+                description: '以 SVB、Signature、BTFP、Credit Suisse 與 First Republic 等銀行壓力事件作為事件 T=0。',
+                category: 'crisis',
+                region: 'us',
+                polarity: 'riskOff',
+                severity: 5,
+                tags: ['美國', '金融壓力', '信用風險', '系統性風險', '高波動', '央行'],
+                dates: [
+                    ['2023-03-10', 'Silicon Valley Bank 關閉'],
+                    ['2023-03-12', 'Signature Bank 關閉 / Fed BTFP 公告'],
+                    ['2023-03-19', 'UBS 收購 Credit Suisse 公告'],
+                    ['2023-05-01', 'First Republic Bank 由 FDIC 接管並出售'],
+                    ['2024-01-31', 'New York Community Bancorp 壓力引發區域銀行賣壓']
+                ]
+            },
+            {
+                id: 'inflation_cpi_shocks',
+                name: '美國 CPI 通膨衝擊',
+                description: '以 2022 通膨週期中顯著改變利率預期的 CPI 公布日作為事件 T=0。',
+                category: 'policy',
+                region: 'us',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['美國', '央行', '升息', '政策', '外資', '匯率', '高波動'],
+                dates: [
+                    ['2022-06-10', '美國 2022 年 5 月 CPI 高於預期'],
+                    ['2022-07-13', '美國 2022 年 6 月 CPI 升至週期高點'],
+                    ['2022-09-13', '美國 2022 年 8 月 CPI 熱於預期'],
+                    ['2022-11-10', '美國 2022 年 10 月 CPI 低於預期'],
+                    ['2022-12-13', '美國 2022 年 11 月 CPI 降溫']
+                ]
+            },
+            {
+                id: 'ai_platform_breakthroughs',
+                name: 'AI 平台突破事件',
+                description: '以生成式 AI、加速運算平台與低成本模型衝擊的代表性日期作為事件 T=0。',
+                category: 'trade',
+                region: 'global',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['全球', '美國', '中國', 'AI', '半導體', '科技鏈', '高波動'],
+                dates: [
+                    ['2022-11-30', 'OpenAI 發布 ChatGPT'],
+                    ['2023-03-14', 'OpenAI 發布 GPT-4'],
+                    ['2024-03-18', 'NVIDIA 發表 Blackwell 平台'],
+                    ['2024-06-02', 'NVIDIA COMPUTEX AI Factory 生態系公告'],
+                    ['2025-01-20', 'DeepSeek-R1 發布'],
+                    ['2025-01-27', 'DeepSeek 引發 AI 類股重估']
+                ]
+            },
+            {
+                id: 'nvidia_earnings_ai_cycle',
+                name: 'NVIDIA 財報公布日（AI 週期）',
+                description: '以 NVIDIA 季度財報新聞稿公布日作為事件日。NVIDIA 通常於美股收盤後公布，T=0 會自動對齊到下一個可交易日，適合觀察財報公布後的直接反應與前後窗口。',
+                category: 'earnings',
+                region: 'us',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['美國', '財報', '半導體', 'AI', '個股', '科技鏈', '高波動'],
+                suggestedSymbols: [
+                    { symbol: 'NVDA', label: 'NVDA 美股' },
+                    { symbol: 'SOXX', label: 'SOXX 半導體 ETF' }
+                ],
+                timingNote: '對齊邏輯：美股收盤後公布，T=0 使用下一個交易日。',
+                reactionTiming: 'afterClose',
+                sourceLabel: 'NVIDIA Investor Relations',
+                dates: [
+                    ['2024-02-21', 'NVIDIA FY2024 Q4 財報'],
+                    ['2024-05-22', 'NVIDIA FY2025 Q1 財報'],
+                    ['2024-08-28', 'NVIDIA FY2025 Q2 財報'],
+                    ['2024-11-20', 'NVIDIA FY2025 Q3 財報'],
+                    ['2025-02-26', 'NVIDIA FY2025 Q4 財報'],
+                    ['2025-05-28', 'NVIDIA FY2026 Q1 財報'],
+                    ['2025-08-27', 'NVIDIA FY2026 Q2 財報'],
+                    ['2025-11-19', 'NVIDIA FY2026 Q3 財報'],
+                    ['2026-02-25', 'NVIDIA FY2026 Q4 財報'],
+                    ['2026-05-20', 'NVIDIA FY2027 Q1 財報']
+                ]
+            },
+            {
+                id: 'tsmc_earnings_ai_cycle',
+                name: '台積電財報公布日（2330 / TSM）',
+                description: '以台積電季度財報與法說會日期作為事件日。台股 2330.TW 因公布時間通常在台股收盤後，T=0 對齊到下一個交易日；美股 ADR TSM 因公布時間早於美股開盤，T=0 使用同一個美股交易日。',
+                category: 'earnings',
+                region: 'taiwan',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['台灣', '財報', '半導體', 'AI', '個股', '科技鏈', '外資'],
+                suggestedSymbols: [
+                    { symbol: '2330.TW', label: '2330.TW 台股' },
+                    { symbol: 'TSM', label: 'TSM ADR' },
+                    { symbol: '^TWII', label: '^TWII 加權指數' }
+                ],
+                timingNote: '對齊邏輯：2330.TW / 台股指數使用下一個交易日；TSM ADR 使用同一個美股交易日。',
+                reactionTiming: 'afterClose',
+                reactionTimingBySymbol: {
+                    TSM: 'sameSession'
+                },
+                sourceLabel: 'TSMC Financial Calendar',
+                dates: [
+                    ['2023-04-20', 'TSMC 1Q23 財報法說'],
+                    ['2023-07-20', 'TSMC 2Q23 財報法說'],
+                    ['2023-10-19', 'TSMC 3Q23 財報法說'],
+                    ['2024-01-18', 'TSMC 4Q23 財報法說'],
+                    ['2024-04-18', 'TSMC 1Q24 財報法說'],
+                    ['2024-07-18', 'TSMC 2Q24 財報法說'],
+                    ['2024-10-17', 'TSMC 3Q24 財報法說'],
+                    ['2025-01-16', 'TSMC 4Q24 財報法說'],
+                    ['2025-04-17', 'TSMC 1Q25 財報法說'],
+                    ['2025-07-17', 'TSMC 2Q25 財報法說'],
+                    ['2025-10-16', 'TSMC 3Q25 財報法說'],
+                    ['2026-01-15', 'TSMC 4Q25 財報法說'],
+                    ['2026-04-16', 'TSMC 1Q26 財報法說']
+                ]
+            },
+            {
+                id: 'amd_earnings_ai_accelerator',
+                name: 'AMD 財報公布日（AI 加速器）',
+                description: '以 AMD 季度財報新聞稿公布日作為事件日。AMD 通常於美股收盤後公布，T=0 使用下一個交易日。',
+                category: 'earnings',
+                region: 'us',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['美國', '財報', '半導體', 'AI', '個股', '科技鏈', '高波動'],
+                suggestedSymbols: [
+                    { symbol: 'AMD', label: 'AMD 美股' },
+                    { symbol: 'SOXX', label: 'SOXX 半導體 ETF' }
+                ],
+                timingNote: '對齊邏輯：美股收盤後公布，T=0 使用下一個交易日。',
+                reactionTiming: 'afterClose',
+                sourceLabel: 'AMD Investor Relations',
+                dates: [
+                    ['2024-01-30', 'AMD 4Q23 財報'],
+                    ['2024-04-30', 'AMD 1Q24 財報'],
+                    ['2024-07-30', 'AMD 2Q24 財報'],
+                    ['2024-10-29', 'AMD 3Q24 財報'],
+                    ['2025-02-04', 'AMD 4Q24 財報'],
+                    ['2025-05-06', 'AMD 1Q25 財報'],
+                    ['2025-08-05', 'AMD 2Q25 財報'],
+                    ['2025-11-04', 'AMD 3Q25 財報'],
+                    ['2026-02-03', 'AMD 4Q25 財報'],
+                    ['2026-05-05', 'AMD 1Q26 財報']
+                ]
+            },
+            {
+                id: 'asml_earnings_semicap_equipment',
+                name: 'ASML 財報公布日（半導體設備）',
+                description: '以 ASML 季度財報公布日作為事件日。ASML 通常於歐洲盤前公布，美股 ADR T=0 使用同一個交易日。',
+                category: 'earnings',
+                region: 'europe',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['歐洲', '財報', '半導體', '個股', '科技鏈', '高波動'],
+                suggestedSymbols: [
+                    { symbol: 'ASML', label: 'ASML ADR' },
+                    { symbol: 'ASML.AS', label: 'ASML Amsterdam' },
+                    { symbol: 'SOXX', label: 'SOXX 半導體 ETF' }
+                ],
+                timingNote: '對齊邏輯：盤前公布，T=0 使用同一交易日。',
+                reactionTiming: 'sameSession',
+                sourceLabel: 'ASML Financial Results',
+                dates: [
+                    ['2023-01-25', 'ASML 4Q22 財報'],
+                    ['2023-04-19', 'ASML 1Q23 財報'],
+                    ['2023-07-19', 'ASML 2Q23 財報'],
+                    ['2023-10-18', 'ASML 3Q23 財報'],
+                    ['2024-01-24', 'ASML 4Q23 財報'],
+                    ['2024-04-17', 'ASML 1Q24 財報'],
+                    ['2024-07-17', 'ASML 2Q24 財報'],
+                    ['2024-10-15', 'ASML 3Q24 財報'],
+                    ['2025-01-29', 'ASML 4Q24 財報'],
+                    ['2025-04-16', 'ASML 1Q25 財報'],
+                    ['2025-07-16', 'ASML 2Q25 財報'],
+                    ['2025-10-15', 'ASML 3Q25 財報'],
+                    ['2026-01-28', 'ASML 4Q25 財報'],
+                    ['2026-04-15', 'ASML 1Q26 財報']
+                ]
+            },
+            {
+                id: 'microsoft_earnings_cloud_ai',
+                name: 'Microsoft 財報公布日（雲端 AI）',
+                description: '以 Microsoft 季度財報公布日作為事件日。Microsoft 通常於美股收盤後公布，T=0 使用下一個交易日。',
+                category: 'earnings',
+                region: 'us',
+                polarity: 'mixed',
+                severity: 4,
+                tags: ['美國', '財報', 'AI', '個股', '科技鏈', '高波動'],
+                suggestedSymbols: [
+                    { symbol: 'MSFT', label: 'MSFT 美股' },
+                    { symbol: 'QQQ', label: 'QQQ Nasdaq ETF' }
+                ],
+                timingNote: '對齊邏輯：美股收盤後公布，T=0 使用下一個交易日。',
+                reactionTiming: 'afterClose',
+                sourceLabel: 'Microsoft Investor Relations',
+                dates: [
+                    ['2024-10-30', 'Microsoft FY2025 Q1 財報'],
+                    ['2025-01-29', 'Microsoft FY2025 Q2 財報'],
+                    ['2025-04-30', 'Microsoft FY2025 Q3 財報'],
+                    ['2025-07-30', 'Microsoft FY2025 Q4 財報'],
+                    ['2025-10-29', 'Microsoft FY2026 Q1 財報'],
+                    ['2026-01-28', 'Microsoft FY2026 Q2 財報'],
+                    ['2026-04-29', 'Microsoft FY2026 Q3 財報']
+                ]
+            },
+            {
+                id: 'apple_earnings_product_cycle',
+                name: 'Apple 財報公布日（產品週期）',
+                description: '以 Apple 季度財報公布日作為事件日。Apple 通常於美股收盤後公布，T=0 使用下一個交易日。',
+                category: 'earnings',
+                region: 'us',
+                polarity: 'mixed',
+                severity: 3,
+                tags: ['美國', '財報', '個股', '科技鏈', '外資'],
+                suggestedSymbols: [
+                    { symbol: 'AAPL', label: 'AAPL 美股' },
+                    { symbol: 'QQQ', label: 'QQQ Nasdaq ETF' }
+                ],
+                timingNote: '對齊邏輯：美股收盤後公布，T=0 使用下一個交易日。',
+                reactionTiming: 'afterClose',
+                sourceLabel: 'Apple Newsroom',
+                dates: [
+                    ['2024-02-01', 'Apple FY2024 Q1 財報'],
+                    ['2024-05-02', 'Apple FY2024 Q2 財報'],
+                    ['2024-08-01', 'Apple FY2024 Q3 財報'],
+                    ['2024-10-31', 'Apple FY2024 Q4 財報'],
+                    ['2025-01-30', 'Apple FY2025 Q1 財報'],
+                    ['2025-05-01', 'Apple FY2025 Q2 財報'],
+                    ['2025-07-31', 'Apple FY2025 Q3 財報'],
+                    ['2025-10-30', 'Apple FY2025 Q4 財報'],
+                    ['2026-01-29', 'Apple FY2026 Q1 財報'],
+                    ['2026-04-30', 'Apple FY2026 Q2 財報']
+                ]
             }
         ];
 
@@ -1559,7 +2005,10 @@
             priceData: [],
             currentMode: 'preset',
             lastRun: null,
-            activeChart: 'avg'
+            activeChart: 'avg',
+            activeSeasonality: 'month',
+            activeSeasonalityView: 'table',
+            calendarStats: null
         };
 
         const el = {
@@ -1572,8 +2021,10 @@
             similarModeBtn: document.getElementById('similarModeBtn'),
             presetPanel: document.getElementById('presetPanel'),
             similarPanel: document.getElementById('similarPanel'),
+            presetGroupSelect: document.getElementById('presetGroupSelect'),
             presetSelect: document.getElementById('presetSelect'),
             presetDetail: document.getElementById('presetDetail'),
+            presetSymbols: document.getElementById('presetSymbols'),
             presetCountBadge: document.getElementById('presetCountBadge'),
             runPresetBtn: document.getElementById('runPresetBtn'),
             categorySelect: document.getElementById('categorySelect'),
@@ -1607,8 +2058,11 @@
             priceChart: document.getElementById('priceChart'),
             priceChartEmpty: document.getElementById('priceChartEmpty'),
             summaryBody: document.getElementById('summaryBody'),
-            monthStatsBody: document.getElementById('monthStatsBody'),
-            weekdayStatsBody: document.getElementById('weekdayStatsBody'),
+            seasonalityTableWrap: document.getElementById('seasonalityTableWrap'),
+            seasonalityTable: document.getElementById('seasonalityTable'),
+            seasonalityHeadRow: document.getElementById('seasonalityHeadRow'),
+            seasonalityStatsBody: document.getElementById('seasonalityStatsBody'),
+            seasonalityHeatmap: document.getElementById('seasonalityHeatmap'),
             casesBody: document.getElementById('casesBody'),
             exportBtn: document.getElementById('exportBtn'),
             resetViewBtn: document.getElementById('resetViewBtn'),
@@ -1624,8 +2078,8 @@
         }
 
         function populateControls() {
-            el.presetSelect.innerHTML = PRESET_EVENTS.map(preset => `<option value="${preset.id}">${escapeHtml(preset.name)}</option>`).join('');
-            el.presetCountBadge.textContent = `${PRESET_EVENTS.length} 類`;
+            el.presetGroupSelect.innerHTML = PRESET_GROUPS.map(group => `<option value="${group.id}">${escapeHtml(group.name)}</option>`).join('');
+            renderPresetOptions();
 
             el.categorySelect.innerHTML = Object.entries(CATEGORY_LABELS)
                 .map(([value, label]) => `<option value="${value}">${label}</option>`)
@@ -1682,10 +2136,39 @@
             `;
         }
 
+        function renderPresetOptions(preferredId) {
+            const presets = getFilteredPresets();
+            const currentId = preferredId || el.presetSelect.value;
+            el.presetSelect.innerHTML = presets.map(preset => `<option value="${preset.id}">${escapeHtml(preset.name)}</option>`).join('');
+
+            if (presets.some(preset => preset.id === currentId)) {
+                el.presetSelect.value = currentId;
+            } else if (presets.length) {
+                el.presetSelect.value = presets[0].id;
+            }
+
+            el.presetCountBadge.textContent = `${presets.length} 項`;
+            renderPresetDetail();
+        }
+
+        function getFilteredPresets() {
+            const group = PRESET_GROUPS.find(item => item.id === el.presetGroupSelect.value) || PRESET_GROUPS[0];
+            return group.presets
+                .map(id => PRESET_EVENTS.find(preset => preset.id === id))
+                .filter(Boolean);
+        }
+
         function bindEvents() {
             el.loadYahooBtn.addEventListener('click', loadYahooData);
             el.csvFileInput.addEventListener('change', handleCsvUpload);
+            el.presetGroupSelect.addEventListener('change', () => renderPresetOptions());
             el.presetSelect.addEventListener('change', renderPresetDetail);
+            el.presetSymbols.addEventListener('click', event => {
+                const button = event.target.closest('[data-symbol]');
+                if (!button) return;
+                el.symbolInput.value = button.dataset.symbol;
+                loadYahooData();
+            });
             el.runPresetBtn.addEventListener('click', runPresetAnalysis);
             el.runSimilarBtn.addEventListener('click', runSimilarAnalysis);
             el.exportBtn.addEventListener('click', exportCases);
@@ -1700,9 +2183,23 @@
 
             document.querySelectorAll('.segment').forEach(button => {
                 button.addEventListener('click', () => {
-                    state.activeChart = button.dataset.chart;
-                    document.querySelectorAll('.segment').forEach(item => item.classList.toggle('active', item === button));
-                    renderReturnChart();
+                    if (button.dataset.chart) {
+                        state.activeChart = button.dataset.chart;
+                        document.querySelectorAll('[data-chart]').forEach(item => item.classList.toggle('active', item === button));
+                        renderReturnChart();
+                    }
+
+                    if (button.dataset.seasonality) {
+                        state.activeSeasonality = button.dataset.seasonality;
+                        document.querySelectorAll('[data-seasonality]').forEach(item => item.classList.toggle('active', item === button));
+                        renderSeasonalityStatsTable();
+                    }
+
+                    if (button.dataset.seasonalityView) {
+                        state.activeSeasonalityView = button.dataset.seasonalityView;
+                        document.querySelectorAll('[data-seasonality-view]').forEach(item => item.classList.toggle('active', item === button));
+                        renderSeasonalityStatsTable();
+                    }
                 });
             });
 
@@ -1747,9 +2244,39 @@
         function renderPresetDetail() {
             const preset = getSelectedPreset();
             if (!preset) return;
-            const firstYear = preset.dates[0][0].slice(0, 4);
-            const lastYear = preset.dates[preset.dates.length - 1][0].slice(0, 4);
-            el.presetDetail.value = `${preset.description}\n樣本：${preset.dates.length} 件 (${firstYear}-${lastYear})\n標籤：${preset.tags.join('、')}`;
+            const firstYear = preset.dates.length ? preset.dates[0][0].slice(0, 4) : '';
+            const lastYear = preset.dates.length ? preset.dates[preset.dates.length - 1][0].slice(0, 4) : '';
+            const details = [
+                preset.description,
+                preset.dates.length ? `樣本：${preset.dates.length} 件 (${firstYear}-${lastYear})` : '樣本：0 件',
+                preset.timingNote ? `事件對齊：${preset.timingNote}` : '',
+                preset.sourceLabel ? `資料來源：${preset.sourceLabel}` : '',
+                `標籤：${preset.tags.join('、')}`
+            ].filter(Boolean);
+
+            el.presetDetail.value = details.join('\n');
+            renderPresetSymbols(preset);
+        }
+
+        function renderPresetSymbols(preset) {
+            const symbols = preset.suggestedSymbols || [];
+            if (!symbols.length) {
+                el.presetSymbols.classList.add('hidden');
+                el.presetSymbols.innerHTML = '';
+                return;
+            }
+
+            el.presetSymbols.classList.remove('hidden');
+            el.presetSymbols.innerHTML = `
+                <div class="preset-symbols-title">建議代號</div>
+                <div class="symbol-chip-row">
+                    ${symbols.map(item => `
+                        <button class="symbol-chip" type="button" data-symbol="${escapeHtml(item.symbol)}">
+                            ${escapeHtml(item.label || item.symbol)}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
         }
 
         async function loadYahooData() {
@@ -1927,12 +2454,18 @@
         }
 
         function getSelectedPreset() {
-            return PRESET_EVENTS.find(preset => preset.id === el.presetSelect.value) || PRESET_EVENTS[0];
+            const presets = getFilteredPresets();
+            return presets.find(preset => preset.id === el.presetSelect.value) || presets[0] || PRESET_EVENTS[0];
         }
 
         function runPresetAnalysis() {
             if (!ensureData()) return;
             const preset = getSelectedPreset();
+            if (preset.skipAnalysis) {
+                renderNoEventResults(preset);
+                return;
+            }
+
             const cases = preset.dates.map(([date, name]) => ({
                 id: `${preset.id}_${date}`,
                 name,
@@ -1942,10 +2475,50 @@
                 polarity: preset.polarity,
                 severity: preset.severity,
                 tags: preset.tags,
+                reactionTiming: preset.reactionTiming,
+                reactionTimingBySymbol: preset.reactionTimingBySymbol,
                 score: 100,
                 source: preset.name
             }));
             runAnalysis(cases, preset.name, preset.description);
+        }
+
+        function renderNoEventResults(preset) {
+            state.lastRun = {
+                mode: 'preset',
+                skipAnalysis: true,
+                title: preset.name,
+                subtitle: preset.description,
+                cases: [],
+                summary: [],
+                periods: getSelectedPeriods()
+            };
+
+            el.resultTitle.textContent = preset.name;
+            el.resultSubtitle.textContent = '';
+            el.sampleBadge.textContent = '0 個案例';
+            el.kpiCases.textContent = '0';
+            el.kpiCasesSub.textContent = '無事件';
+            el.kpiT5.textContent = '-';
+            el.kpiT5.className = 'kpi-value neutral';
+            el.kpiT5Sub.textContent = '-';
+            el.kpiT20.textContent = '-';
+            el.kpiT20.className = 'kpi-value neutral';
+            el.kpiT20Sub.textContent = '-';
+            el.kpiWorst.textContent = '-';
+            el.kpiWorst.className = 'kpi-value neutral';
+            el.kpiWorstSub.textContent = '-';
+            el.summaryBody.innerHTML = '<tr><td colspan="10">無事件</td></tr>';
+            el.casesBody.innerHTML = '<tr><td colspan="16">無事件</td></tr>';
+            el.returnChart.classList.add('hidden');
+            el.returnChart.innerHTML = '';
+            el.chartEmpty.classList.remove('hidden');
+            el.chartEmpty.textContent = '無事件';
+            el.heatmapChart.classList.add('hidden');
+            el.heatmapChart.innerHTML = '';
+            el.heatmapEmpty.classList.remove('hidden');
+            el.heatmapEmpty.textContent = '無事件';
+            renderPriceChart([]);
         }
 
         function runSimilarAnalysis() {
@@ -2004,25 +2577,48 @@
         function buildCase(event, periods) {
             const eventDate = parseDate(event.date);
             if (!eventDate) return null;
-            const index = findTradingIndexOnOrAfter(eventDate);
-            if (index < 0) return null;
-            const trading = state.priceData[index];
-            const calendarLag = Math.round((trading.dateObj - normalizeDate(eventDate)) / 86400000);
-            if (calendarLag > 10) return null;
+            const anchor = resolveTradingAnchor(event, eventDate);
+            if (!anchor) return null;
 
             const returns = {};
             periods.forEach(period => {
-                returns[period] = calcWindowReturn(index, period);
+                returns[period] = calcWindowReturn(anchor.index, period);
             });
 
             return {
                 ...event,
                 eventDate: formatDate(eventDate),
-                tradingDate: trading.date,
-                tradingIndex: index,
-                calendarLag,
+                tradingDate: anchor.trading.date,
+                tradingIndex: anchor.index,
+                calendarLag: anchor.calendarLag,
                 returns
             };
+        }
+
+        function resolveTradingAnchor(event, eventDate) {
+            const baseIndex = findTradingIndexOnOrAfter(eventDate);
+            if (baseIndex < 0) return null;
+
+            const baseTrading = state.priceData[baseIndex];
+            const timing = getReactionTiming(event);
+            const eventDateText = formatDate(eventDate);
+            let index = baseIndex;
+
+            if ((timing === 'afterClose' || timing === 'nextSession') && baseTrading.date === eventDateText) {
+                index += 1;
+            }
+
+            if (index < 0 || index >= state.priceData.length) return null;
+            const trading = state.priceData[index];
+            const calendarLag = Math.round((trading.dateObj - normalizeDate(eventDate)) / 86400000);
+            if (calendarLag > 10) return null;
+
+            return { index, trading, calendarLag };
+        }
+
+        function getReactionTiming(event) {
+            const symbol = state.marketSymbol.trim().toUpperCase();
+            return event.reactionTimingBySymbol?.[symbol] || event.reactionTiming || 'sameSession';
         }
 
         function calcWindowReturn(index, period) {
@@ -2164,19 +2760,37 @@
                 label: `星期${weekdayNames[day]}`,
                 values: []
             }]));
+            const dayBuckets = Array.from({ length: 31 }, (_, index) => ({
+                label: `${index + 1} 日`,
+                values: []
+            }));
 
             state.priceData.forEach((row, index) => {
                 if (index === 0) return;
                 const ret = pct(state.priceData[index - 1].close, row.close);
                 const bucket = weekdayBuckets.get(row.dateObj.getDay());
                 if (bucket && Number.isFinite(ret)) bucket.values.push(ret);
+                const dayBucket = dayBuckets[row.dateObj.getDate() - 1];
+                if (dayBucket && Number.isFinite(ret)) dayBucket.values.push(ret);
             });
 
-            renderCalendarStatsTable(el.monthStatsBody, monthBuckets.map(buildCalendarStat));
-            renderCalendarStatsTable(el.weekdayStatsBody, weekdayOrder
-                .map(day => buildCalendarStat(weekdayBuckets.get(day)))
-                .filter(row => row.count > 0)
-            );
+            state.calendarStats = {
+                month: {
+                    label: '月份',
+                    rows: monthBuckets.map(buildCalendarStat)
+                },
+                weekday: {
+                    label: '星期',
+                    rows: weekdayOrder
+                        .map(day => buildCalendarStat(weekdayBuckets.get(day)))
+                        .filter(row => row.count > 0)
+                },
+                day: {
+                    label: '日期',
+                    rows: dayBuckets.map(buildCalendarStat)
+                }
+            };
+            renderSeasonalityStatsTable();
         }
 
         function buildCalendarStat(bucket) {
@@ -2193,6 +2807,72 @@
                 avg: mean(bucket.values),
                 median: median(sorted)
             };
+        }
+
+        function renderSeasonalityStatsTable() {
+            const current = state.calendarStats?.[state.activeSeasonality];
+            const rows = current?.rows || [];
+            const heatmapMode = state.activeSeasonalityView === 'heatmap';
+            el.seasonalityTableWrap.classList.toggle('hidden', heatmapMode);
+            el.seasonalityTable.classList.toggle('is-day-split', state.activeSeasonality === 'day');
+            renderSeasonalityHeatmap(rows);
+            if (state.activeSeasonality === 'day') {
+                renderDaySplitStatsTable(el.seasonalityStatsBody, rows);
+                return;
+            }
+
+            el.seasonalityHeadRow.innerHTML = `
+                <th>${escapeHtml(current?.label || '項目')}</th>
+                <th>樣本</th>
+                <th>上漲率</th>
+                <th>下跌率</th>
+                <th>平均</th>
+                <th>中位數</th>
+            `;
+            renderCalendarStatsTable(el.seasonalityStatsBody, rows);
+        }
+
+        function renderDaySplitStatsTable(tbody, rows) {
+            const validRows = rows.filter(row => row.count > 0);
+            el.seasonalityHeadRow.innerHTML = `
+                <th></th>
+                <th>樣本</th>
+                <th>上漲率</th>
+                <th>平均</th>
+                <th></th>
+                <th>樣本</th>
+                <th>上漲率</th>
+                <th>平均</th>
+            `;
+
+            if (!validRows.length) {
+                tbody.innerHTML = '<tr><td colspan="8">尚無資料</td></tr>';
+                return;
+            }
+
+            const firstHalf = validRows.slice(0, 16);
+            const secondHalf = validRows.slice(16);
+            const maxRows = Math.max(firstHalf.length, secondHalf.length);
+            tbody.innerHTML = Array.from({ length: maxRows }, (_, index) => {
+                const left = firstHalf[index];
+                const right = secondHalf[index];
+                return `
+                    <tr>
+                        ${renderCompactDayCells(left)}
+                        ${renderCompactDayCells(right)}
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderCompactDayCells(row) {
+            if (!row) return '<td></td><td></td><td></td><td></td>';
+            return `
+                <td><strong>${escapeHtml(row.label)}</strong></td>
+                <td>${row.count}</td>
+                <td class="${row.winRate >= 50 ? 'positive' : 'negative'}">${row.winRate.toFixed(1)}%</td>
+                <td class="${valueClass(row.avg)}">${formatPct(row.avg)}</td>
+            `;
         }
 
         function renderCalendarStatsTable(tbody, rows) {
@@ -2214,9 +2894,59 @@
             `).join('');
         }
 
+        function renderSeasonalityHeatmap(rows) {
+            const validRows = rows.filter(row => row.count > 0);
+            el.seasonalityHeatmap.className = `seasonality-heatmap is-${state.activeSeasonality}${state.activeSeasonalityView === 'heatmap' ? '' : ' hidden'}`;
+
+            if (!validRows.length) {
+                el.seasonalityHeatmap.innerHTML = '<div class="seasonality-empty">尚無資料</div>';
+                return;
+            }
+
+            const maxAbs = Math.max(0.01, ...validRows
+                .map(row => Math.abs(row.avg))
+                .filter(value => Number.isFinite(value)));
+
+            el.seasonalityHeatmap.innerHTML = validRows.map(row => {
+                const winRate = Number.isFinite(row.winRate) ? `${row.winRate.toFixed(1)}%` : '-';
+                const borderColor = row.avg > 0 ? 'rgba(217, 45, 32, 0.42)' : row.avg < 0 ? 'rgba(22, 128, 60, 0.42)' : '#d9dee7';
+                return `
+                    <div class="seasonality-heat-cell" style="background:${seasonalityHeatColor(row.avg, maxAbs)}; border-color:${borderColor};">
+                        <div class="seasonality-heat-top">
+                            <strong>${escapeHtml(row.label)}</strong>
+                            <span class="seasonality-heat-sample">${row.count}筆</span>
+                        </div>
+                        <div class="seasonality-heat-value ${valueClass(row.avg)}">${formatPct(row.avg)}</div>
+                        <div class="seasonality-heat-rate">上漲率 ${winRate}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function seasonalityHeatColor(value, maxAbs) {
+            if (!Number.isFinite(value) || maxAbs <= 0) return '#f8fafc';
+            const intensity = Math.min(1, Math.abs(value) / maxAbs);
+            const alpha = 0.08 + intensity * 0.24;
+            return value >= 0
+                ? `rgba(217, 45, 32, ${alpha.toFixed(3)})`
+                : `rgba(22, 128, 60, ${alpha.toFixed(3)})`;
+        }
+
         function clearCalendarStats() {
-            el.monthStatsBody.innerHTML = '<tr><td colspan="6">尚無資料</td></tr>';
-            el.weekdayStatsBody.innerHTML = '<tr><td colspan="6">尚無資料</td></tr>';
+            state.calendarStats = null;
+            el.seasonalityTableWrap.classList.toggle('hidden', state.activeSeasonalityView === 'heatmap');
+            el.seasonalityHeatmap.className = `seasonality-heatmap is-${state.activeSeasonality}${state.activeSeasonalityView === 'heatmap' ? '' : ' hidden'}`;
+            el.seasonalityHeatmap.innerHTML = '<div class="seasonality-empty">尚無資料</div>';
+            el.seasonalityTable.classList.remove('is-day-split');
+            el.seasonalityHeadRow.innerHTML = `
+                <th>月份</th>
+                <th>樣本</th>
+                <th>上漲率</th>
+                <th>下跌率</th>
+                <th>平均</th>
+                <th>中位數</th>
+            `;
+            el.seasonalityStatsBody.innerHTML = '<tr><td colspan="6">尚無資料</td></tr>';
         }
 
         function renderSummaryTable(summary) {
@@ -2282,6 +3012,7 @@
                 el.returnChart.classList.add('hidden');
                 el.returnChart.innerHTML = '';
                 el.chartEmpty.classList.remove('hidden');
+                el.chartEmpty.textContent = '等待分析結果。';
                 return;
             }
 
@@ -2304,6 +3035,7 @@
                 el.heatmapChart.classList.add('hidden');
                 el.heatmapChart.innerHTML = '';
                 el.heatmapEmpty.classList.remove('hidden');
+                el.heatmapEmpty.textContent = '等待分析結果。';
                 return;
             }
 
@@ -2485,7 +3217,7 @@
             const { width, height } = chartBox(el.priceChart, 430);
             const pad = chartPad(width);
             const data = state.priceData;
-            if (!data.length) return emptySvg(width, height, '載入行情資料後顯示');
+            if (!data.length) return emptySvg(width, height, '尚無資料');
 
             const closes = data.map(row => row.close);
             const minClose = Math.min(...closes);
@@ -2567,7 +3299,7 @@
 
         function renderEmptyState() {
             el.resultTitle.textContent = '尚未開始分析';
-            el.resultSubtitle.textContent = '載入行情資料後選擇事件主題。';
+            el.resultSubtitle.textContent = '';
             el.sampleBadge.textContent = '0 個案例';
             el.kpiCases.textContent = '-';
             el.kpiCasesSub.textContent = '等待行情資料';
@@ -2582,9 +3314,11 @@
             el.casesBody.innerHTML = '<tr><td colspan="16">尚無資料</td></tr>';
             el.returnChart.classList.add('hidden');
             el.chartEmpty.classList.remove('hidden');
+            el.chartEmpty.textContent = '等待分析結果。';
             el.heatmapChart.classList.add('hidden');
             el.heatmapChart.innerHTML = '';
             el.heatmapEmpty.classList.remove('hidden');
+            el.heatmapEmpty.textContent = '等待分析結果。';
             renderPriceChart([]);
         }
 
@@ -2598,6 +3332,8 @@
                 region: preset.region,
                 polarity: preset.polarity,
                 severity: preset.severity,
+                reactionTiming: preset.reactionTiming,
+                reactionTimingBySymbol: preset.reactionTimingBySymbol,
                 tags: preset.tags
             })));
         }
@@ -2690,8 +3426,8 @@
         function resetView() {
             state.lastRun = null;
             setMode('preset');
-            el.presetSelect.value = PRESET_EVENTS[0].id;
-            renderPresetDetail();
+            el.presetGroupSelect.value = PRESET_GROUPS[0].id;
+            renderPresetOptions(PRESET_GROUPS[0].presets[0]);
             renderEmptyState();
             showToast('畫面已重設。');
         }
